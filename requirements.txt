@@ -8,3 +8,4 @@ pandas==2.1.4
 requests==2.31.0
 numpy==1.26.2
 Pillow==10.1.0
+langchain-experimental==0.0.47
