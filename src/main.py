@@ -1,8 +1,17 @@
 from abc import ABC, abstractmethod
 from textwrap import dedent, indent
-from typing import List, Tuple
 import functools
 import inspect
+
+
+INSTALLED_PACKAGES = [
+    "wikipedia",
+    "requests",
+    "bs4",  # beautifulsoup4
+    "numpy",
+    "pandas",
+    "Pillow",
+]
 
 function_signatures = []
 
@@ -20,6 +29,10 @@ def store_function_signature(func):
 
 def get_formatted_function_signatures():
     return ",\n".join(function_signatures)
+
+
+def get_formatted_installed_packages():
+    return ",\n".join(INSTALLED_PACKAGES)
 
 
 class LLMPipe(ABC):
@@ -45,48 +58,58 @@ class OllamaLLMPipe(LLMPipe):
 
 prompt = dedent(
     """
+    \"""
     System Instructions:
-    - You are an AI agent capable of writing a Python function to achieve the desired goal stated by the user.
-    - While most questions will not be coding questions, you will use code as a method to communicate your process and result.
-    - Use standard Python syntax.
-    - You may use any standard Python library functions, but make sure to import properly within the function.
-    - Extra functions will also be available that are already pre-defined by the system (listed under "Available Extra Functions").
-    - Your function must return the final answer and only the final answer.
-    - You may only write a single function that must have the signature "def answer_question() -> str".
+    - You are an AI agent capable of writing Python code to produce the desired result as stated by the user.
+    - If you use any packages, be sure to import them.
+    - Use no try/except blocks, as in the event of an error, you will have more chances.
+    - Use standard Python syntax - your string will be ran using exec().
+    - Your code must have a function with signature "def get_result() -> str:" that returns the final result created for the user.
 
-    Available Extra Functions:
+    Installed Packages:
+    [
+    {packages_list}
+    ]
+
+    Pre-Defined Custom Functions:
     [
     {function_list}
     ]
 
-    Example Function 1:
-    def answer_question() -> str:
-        result = multiply(2, 3)
-        result = divide_num1_by_num2(result, 2)
-        return result
+    === Example Code 1 ===
+    def get_result() -> str:
+        result = 2 * 3
+        return str(result)
 
-    Example Function 2:
-    def answer_question() -> str:
+    === Example Code 2 ===
+    def get_random_number() -> int:
         import random
-        def append_hello(text: str) -> str:
-            return f"Hello {{text}}!"
-        result1 = wikipedia_search("Python (programming language)")
-        result2 = wikipedia_search("Python (genus)")
-        result = random.choice([result1, result2])
-        result = append_hello(result)
-        return result
+        return random.randint(0, 100)
+    def get_result() -> str:
+    result = get_random_number() + 2
 
-    Example Function 3:
-    def answer_question() -> str:
-        return "A long time ago in a galaxy far, far away...."
-        
+    === Example Code 3 ===
+    def get_result() -> str:
+        from textwrap import dedent
+        return dedent(
+            \"""
+                # Top 10 Things to Do in San Diego
+                1. Visit the San Diego Zoo
+                2. Visit the San Diego Zoo Safari Park
+                3. Go to the beach
+                ### ...
+            \"""
+        )
+
+
 
     === Now it's your turn ===
 
     User Goal:
     {user_goal}
 
-    Your Function:
+    # Your Code (answer returned with "def get_result() -> str"):
+    \"""
     """
 )
 
@@ -101,25 +124,47 @@ def subtract_num2_from_num1(num1: float, num2: float) -> float:
     return num1 - num2
 
 
-USER_GOAL = "write an article on the history of the Star Wars franchise"
-model = OllamaLLMPipe(model_name="mistral-openorca", temperature=0)
+# USER_GOAL = dedent(
+#     """
+#     write me a markdown news article about the best coding tools for beginners.
+#     be sure to use advanced markdown because you are a professional. Don't put a title, but make sure to use
+#     proper markdown headings like ##, ###, ####, etc.
+#     """
+# )
+USER_GOAL = dedent(
+    """
+    search the internet for a hd image of a goat and give me the url
+    """
+)
+model = OllamaLLMPipe(model_name="mistral-openorca", temperature=0.8)
 
 prompt = prompt.format(
+    packages_list=indent(get_formatted_installed_packages(), " " * 4),
     function_list=indent(get_formatted_function_signatures(), " " * 4),
     user_goal=USER_GOAL,
 )
 print(prompt)
 
 while True:
+    print("================")
     llm_function_in_text = model(prompt)
     print(llm_function_in_text)
+
+    # NOTE: Prevent model from using try/except
+    if "try:" in llm_function_in_text:
+        print("Sending Back to LLM...")
+        continue
+
+    # Evaluate function and get result
     try:
         exec(llm_function_in_text)
-        print(answer_question())  # type: ignore (defined by llm)
+        result = get_result()  # type: ignore (defined by llm)
+        if result is None:
+            raise Exception("Function returned None")
+        print(result)
         break
     except Exception as e:
         print(e)
-        print("Sending Back to LLM...")
         continue
 
 # EVALUATE
