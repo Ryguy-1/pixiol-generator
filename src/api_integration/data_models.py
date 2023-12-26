@@ -4,22 +4,22 @@ from datetime import datetime
 
 
 @dataclass(frozen=True)
-class Asset:
+class PersistedAsset:
     id: str
     url: str
 
 
 @dataclass(frozen=True)
-class Category:
+class PersistedCategory:
     id: int
     title: str
 
 
 @dataclass(frozen=True)
-class NewsArticle:
+class PersistedNewsArticle:
     id: int
     title: str
     content: str
-    featuredImage: Asset
+    featuredImage: PersistedAsset
     publishedDate: datetime
-    categories: List[Category]
+    categories: List[PersistedCategory]
