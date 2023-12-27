@@ -14,12 +14,12 @@ import os
 class UploadAPI(ABC):
     @abstractmethod
     def upload_asset(self, local_file_path: str) -> PersistedAsset:
-        """Uploads a file to the API and returns the created Asset object."""
+        """Uploads a file to the API and returns the created PersistedAsset object."""
         pass
 
     @abstractmethod
     def upload_category(self, category_title: str) -> PersistedCategory:
-        """Uploads a category to the API and returns the created Category object."""
+        """Uploads a category to the API and returns the created PersistedCategory object."""
         pass
 
     @abstractmethod
@@ -27,11 +27,11 @@ class UploadAPI(ABC):
         self,
         title: str,
         content: str,
-        featuredImage: PersistedAsset,
         publishedDate: datetime,
+        featuredImage: PersistedAsset,
         categories: List[PersistedCategory],
     ) -> PersistedNewsArticle:
-        """Uploads a news article to the API and returns the created NewsArticle object."""
+        """Uploads a news article to the API and returns the created PersistedNewsArticle object."""
 
 
 class ContentfulUploadAPI(UploadAPI):
@@ -109,18 +109,19 @@ class ContentfulUploadAPI(UploadAPI):
             },
         )
         category.publish()
-        return PersistedCategory(id=category.id, title=category.fields()["title"])
+        return PersistedCategory(id=category.id, title=category_title)
 
     def upload_news_article(
         self,
         title: str,
         content: str,
-        featuredImage: PersistedAsset,
         publishedDate: datetime,
+        featuredImage: PersistedAsset,
         categories: List[PersistedCategory],
     ) -> PersistedNewsArticle:
         """Uploads a news article to the API and returns the created NewsArticle object."""
         unique_id = str(uuid.uuid4())
+        formatted_datetime = publishedDate.strftime("%Y-%m-%dT%H:%M")
         news_article = self._client.entries(
             self._space_id, self._environment_id
         ).create(
@@ -140,9 +141,7 @@ class ContentfulUploadAPI(UploadAPI):
                         }
                     },
                     "publishedDate": {
-                        "en-US": publishedDate.strftime(
-                            "%Y-%m-%dT%H:%M%z"
-                        )  # ex: 2021-01-01T00:00+0000
+                        "en-US": formatted_datetime,
                     },
                     "categories": {
                         "en-US": [
@@ -162,9 +161,9 @@ class ContentfulUploadAPI(UploadAPI):
         news_article.publish()
         return PersistedNewsArticle(
             id=news_article.id,
-            title=news_article.fields()["title"],
-            content=news_article.fields()["content"],
-            featuredImage=news_article.fields()["featuredImage"],
-            publishedDate=news_article.fields()["publishedDate"],
-            categories=news_article.fields()["categories"],
+            title=title,
+            content=content,
+            publishedDate=formatted_datetime,
+            featuredImage=featuredImage,
+            categories=categories,
         )
