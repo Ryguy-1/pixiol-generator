@@ -83,8 +83,8 @@ class ContentfulUploadAPI(UploadAPI):
                     "description": {"en-US": "Auto-Uploaded by Pixiol-Generator."},
                     "file": {
                         "en-US": {
-                            "fileName": f"{uuid.uuid4()}.{extension}",  # ex: 1234-1234-1234-1234.png
-                            "contentType": f"image/{extension}",  # ex: image/png
+                            "fileName": f"{uuid.uuid4()}.{extension}",
+                            "contentType": f"image/{extension}",
                             "uploadFrom": upload.to_link().to_json(),
                         }
                     },
