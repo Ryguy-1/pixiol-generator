@@ -10,14 +10,13 @@ def main():
         space_id=CONTENTFUL_SPACE_ID,
         environment_id=CONTENTFUL_ENVIRONMENT_ID,
     )
-    uploaded_baloons = upload_api.upload_asset("src/balloons.jpg")
-    uploaded_test_category = upload_api.upload_category("Test Category")
+    uploaded_baloons = upload_api.upload_asset("src/balloons.jpg")  # upload baloon
     fetch_api = ContentfulFetchAPI(
         management_api_token=CONTENTFUL_MANAGEMENT_API_TOKEN,
         space_id=CONTENTFUL_SPACE_ID,
         environment_id=CONTENTFUL_ENVIRONMENT_ID,
     )
-    medicine = None
+    medicine = None  # get medicine category
     for category in fetch_api.fetch_categories():
         if category.title == "Medicine":
             medicine = category
@@ -27,10 +26,10 @@ def main():
 
     uploaded_news_article = upload_api.upload_news_article(
         title="Test News Article",
-        content="This is a test news article",
+        content="# This is a test news article!",
         featuredImage=uploaded_baloons,
         publishedDate=datetime.now(),
-        categories=[uploaded_test_category, medicine],
+        categories=[medicine],
     )
     print(uploaded_news_article)
 

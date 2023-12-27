@@ -139,7 +139,11 @@ class ContentfulUploadAPI(UploadAPI):
                             }
                         }
                     },
-                    "publishedDate": {"en-US": publishedDate.isoformat()},
+                    "publishedDate": {
+                        "en-US": publishedDate.strftime(
+                            "%Y-%m-%dT%H:%M%z"
+                        )  # ex: 2021-01-01T00:00+0000
+                    },
                     "categories": {
                         "en-US": [
                             {
