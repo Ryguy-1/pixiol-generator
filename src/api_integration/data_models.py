@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import List
-from datetime import datetime
 
 
 @dataclass(frozen=True)
@@ -11,15 +10,15 @@ class PersistedAsset:
 
 @dataclass(frozen=True)
 class PersistedCategory:
-    id: int
+    id: str
     title: str
 
 
 @dataclass(frozen=True)
 class PersistedNewsArticle:
-    id: int
+    id: str
     title: str
     content: str
+    publishedDate: str
     featuredImage: PersistedAsset
-    publishedDate: datetime
     categories: List[PersistedCategory]
