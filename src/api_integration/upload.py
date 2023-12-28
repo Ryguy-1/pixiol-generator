@@ -7,19 +7,39 @@ from api_integration.data_models import (
 )
 from datetime import datetime
 import contentful_management
+from PIL import Image
 import uuid
+import io
 import os
 
 
 class UploadAPI(ABC):
+    """API for uploading Pixiol data to source."""
+
     @abstractmethod
-    def upload_asset(self, local_file_path: str) -> PersistedAsset:
-        """Uploads a file to the API and returns the created PersistedAsset object."""
+    def upload_asset(self, pil_image: Image) -> PersistedAsset:
+        """
+        Uploads an image asset to the API and returns the created PersistedAsset object.
+
+        Args:
+            pil_image (Image): The image to upload.
+
+        Returns:
+            PersistedAsset: The created asset.
+        """
         pass
 
     @abstractmethod
     def upload_category(self, category_title: str) -> PersistedCategory:
-        """Uploads a category to the API and returns the created PersistedCategory object."""
+        """
+        Uploads a category to the API and returns the created PersistedCategory object.
+
+        Args:
+            category_title (str): The title of the category to upload.
+
+        Returns:
+            PersistedCategory: The created category.
+        """
         pass
 
     @abstractmethod
@@ -31,7 +51,20 @@ class UploadAPI(ABC):
         featuredImage: PersistedAsset,
         categories: List[PersistedCategory],
     ) -> PersistedNewsArticle:
-        """Uploads a news article to the API and returns the created PersistedNewsArticle object."""
+        """
+        Uploads a news article to the API and returns the created PersistedNewsArticle object.
+
+        Args:
+            title (str): The title of the news article to upload.
+            content (str): The content of the news article to upload.
+            publishedDate (datetime): The publish date of the news article to upload.
+            featuredImage (PersistedAsset): The featured image of the news article to upload.
+            categories (List[PersistedCategory]): The categories of the news article to upload.
+
+        Returns:
+            PersistedNewsArticle: The created news article.
+        """
+        pass
 
 
 class ContentfulUploadAPI(UploadAPI):
@@ -69,12 +102,20 @@ class ContentfulUploadAPI(UploadAPI):
         self._space_id = space_id
         self._environment_id = environment_id
 
-    def upload_asset(self, local_file_path: str) -> PersistedAsset:
-        """Uploads a file to the API and returns the created Asset object."""
+    def upload_asset(self, pil_image: Image) -> PersistedAsset:
         unique_id = str(uuid.uuid4())
-        extension = local_file_path.split(".")[-1]
-        with open(local_file_path, "rb") as image_file:
-            upload = self._client.uploads(self._space_id).create(image_file)
+        default_format = "PNG"
+
+        file_extension = (
+            pil_image.format.lower() if pil_image.format else default_format.lower()
+        )
+        file_name = f"{unique_id}.{file_extension}"
+
+        with io.BytesIO() as img_byte_arr:
+            pil_image.save(img_byte_arr, format=pil_image.format or default_format)
+            img_byte_arr.seek(0)  # Reset the buffer to the beginning
+            upload = self._client.uploads(self._space_id).create(img_byte_arr)
+
         asset = self._client.assets(self._space_id, self._environment_id).create(
             unique_id,
             {
@@ -83,8 +124,8 @@ class ContentfulUploadAPI(UploadAPI):
                     "description": {"en-US": "Auto-Uploaded by Pixiol-Generator."},
                     "file": {
                         "en-US": {
-                            "fileName": f"{uuid.uuid4()}.{extension}",
-                            "contentType": f"image/{extension}",
+                            "fileName": file_name,
+                            "contentType": f"image/{file_extension}",
                             "uploadFrom": upload.to_link().to_json(),
                         }
                     },
@@ -99,7 +140,6 @@ class ContentfulUploadAPI(UploadAPI):
         return PersistedAsset(id=asset.id, url=f"https:{asset.fields()['file']['url']}")
 
     def upload_category(self, category_title: str) -> PersistedCategory:
-        """Uploads a category to the API and returns the created Category object."""
         unique_id = str(uuid.uuid4())
         category = self._client.entries(self._space_id, self._environment_id).create(
             unique_id,
@@ -119,7 +159,6 @@ class ContentfulUploadAPI(UploadAPI):
         featuredImage: PersistedAsset,
         categories: List[PersistedCategory],
     ) -> PersistedNewsArticle:
-        """Uploads a news article to the API and returns the created NewsArticle object."""
         unique_id = str(uuid.uuid4())
         formatted_datetime = publishedDate.strftime("%Y-%m-%dT%H:%M")
         news_article = self._client.entries(

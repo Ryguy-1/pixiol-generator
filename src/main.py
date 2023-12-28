@@ -2,34 +2,20 @@ from config import *
 
 
 def main():
+    from api_integration.upload import ContentfulUploadAPI
     import os
-    import torch
 
-    # print torch gpu info
-    print("torch.cuda.is_available():", torch.cuda.is_available())
-
-    model_path = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "models",
-        "juggernautXL_v7Rundiffusion.safetensors",
+    api = ContentfulUploadAPI(
+        management_api_token=CONTENTFUL_MANAGEMENT_API_TOKEN,
+        space_id=CONTENTFUL_SPACE_ID,
+        environment_id=CONTENTFUL_ENVIRONMENT_ID,
     )
+    from diffusion_generator.text_to_image import LocalSDXLTextToImage
 
-    from diffusers import StableDiffusionXLPipeline
-
-    pipe = StableDiffusionXLPipeline.from_single_file(
-        model_path,
-        torch_dtype=torch.float16,
-        use_safetensors=True,
-    ).to("cuda")
-    pipe.enable_model_cpu_offload()
-
-    image = pipe(
-        prompt="a couple walking on the beach romantic picture",
-        num_inference_steps=50,
-    ).images[0]
-
-    image.save("test.png")
+    gen = LocalSDXLTextToImage(model_path=os.path.join(SDXL_PATH))
+    img = gen.generate_image("image of a rainbow umbrella in the rain very bright")
+    uploaded_asset = api.upload_asset(img)
+    print(uploaded_asset)
 
 
 if __name__ == "__main__":
