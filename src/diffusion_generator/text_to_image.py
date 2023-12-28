@@ -39,7 +39,7 @@ class LocalSDXLTextToImage(TextToImage):
             torch_dtype=torch.float16,
             use_safetensors=True,
         ).to("cuda")
-        self._pipe.enable_model_cpu_offload()  # low vram optimization
+        self._pipe.enable_sequential_cpu_offload()
 
     def generate_image(self, prompt: str) -> Image:
         image = self._pipe(

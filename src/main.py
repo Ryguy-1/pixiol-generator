@@ -39,8 +39,8 @@ def publish_new_article(article_description: str) -> None:
     ]
     print(f"Chosen Categories: {[x.title for x in chosen_categories]}")
 
-    # Wait for VRAM to be available
-    wait_for_vram_availability(threshold_gb=6)
+    # # Wait for VRAM to be available
+    # wait_for_vram_availability(threshold_gb=6)
 
     gen = LocalSDXLTextToImage(model_path=os.path.join(SDXL_PATH))
     img = gen.generate_image(article["header_img_description"])
