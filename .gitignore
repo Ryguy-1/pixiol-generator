@@ -1,5 +1,8 @@
 # === Custom ===
-scratch/
+scratch/*
+!scratch/scratch_files_go_here.txt
+models/*
+!models/models_go_here.txt
 *config.py
 
 # Byte-compiled / optimized / DLL files
