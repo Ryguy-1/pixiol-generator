@@ -1,7 +1,7 @@
 from abc import ABC
 from langchain.llms.ollama import Ollama
 from langchain_core.messages import HumanMessage, SystemMessage
-from typing import Dict
+from typing import Dict, List
 import json
 
 
@@ -9,7 +9,19 @@ class InOut(ABC):
     def __init__(self, llm):
         self._llm = llm
 
-    def write_news_article(self, article_description: str) -> Dict:
+    def write_news_article(
+        self, article_description: str, category_constraint: List[str]
+    ) -> Dict:
+        """
+        Writes a news article.
+
+        Args:
+            article_description (str): Description of article.
+            category_constraint (List[str]): List of categories to constrain output selection to.
+
+        Returns:
+            Dict: News article.
+        """
         system_message = """
 === High Level ===
 - You are a professional AI journalist trained in writing long (10+ min read), informative, and engaging articles
@@ -19,11 +31,13 @@ class InOut(ABC):
 === Output Format ===
 - Output must be valid JSON (checked with json.loads)
 - Output must have exactly 3 keys: [ title, header_img_description, body ]
-- Example Format: {"title": "SEO Optimized Title", "header_img_description": "hyper-detailed description of image to use for header image", "body": "## Intro Paragraph\n\nFollowed by entire rest of article all in raw markdown."}
+- *Single Line* output example: {"title": "Long, Specific, and SEO Optimized Title", "category_list": ["category_1", "category_2"], "header_img_description": "hyper-detailed description of image to use for header image", "body": "## Intro Paragraph\n\nFollowed by entire rest of article all in raw markdown."}
         """
         messages = [
             SystemMessage(content=system_message),
-            HumanMessage(content=f"An article about {article_description}"),
+            HumanMessage(
+                content=f"Article Description: '{article_description}', Categories to Choose From: {category_constraint}"
+            ),
         ]
 
         while True:
@@ -32,10 +46,26 @@ class InOut(ABC):
                 generated_text = generated_text.strip()
                 generated_text = generated_text.replace("\n", "\\n")
                 loaded_json = json.loads(generated_text)
-                expected_keys = ["title", "header_img_description", "body"]
-                assert all([key in loaded_json for key in expected_keys])
-                assert all([isinstance(loaded_json[key], str) for key in expected_keys])
-                assert all([len(loaded_json[key]) > 0 for key in expected_keys])
+                str_expected_keys = [
+                    "title",
+                    "header_img_description",
+                    "body",
+                ]
+                for key in str_expected_keys:
+                    assert key in loaded_json
+                    assert isinstance(loaded_json[key], str)
+                    assert len(loaded_json[key]) > 0
+                list_expected_keys = ["category_list"]
+                for key in list_expected_keys:
+                    assert key in loaded_json
+                    assert isinstance(loaded_json[key], list)
+                    assert len(loaded_json[key]) > 0
+                    assert all(isinstance(item, str) for item in loaded_json[key])
+                    # check that all categories are in the constraint
+                    assert all(
+                        category in category_constraint for category in loaded_json[key]
+                    )
+
                 return loaded_json
             except Exception as e:
                 print(str(e))
