@@ -2,9 +2,13 @@ from config import *
 
 
 def main():
-    from llm_generator.in_out import write_news_article
-    article = write_news_article(article_description="why dogs are cool")
-    print(article.get(''))
+    from llm_generator.in_out import OllamaInOut
+
+    llm = OllamaInOut(model_name=OLLAMA_MODEL, temperature=OLLAMA_TEMPERATURE)
+    article = llm.write_news_article(article_description="how to write markdown")
+    print(article.get("title"))
+    print(article.get("header_img_description"))
+    print(article.get("body"))
 
     # from api_integration.upload import ContentfulUploadAPI
     # import os
