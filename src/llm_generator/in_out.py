@@ -1,5 +1,4 @@
 from abc import ABC
-from langchain.llms.ollama import Ollama
 from langchain_core.messages import HumanMessage, SystemMessage
 from typing import Dict, List
 import json
@@ -30,8 +29,9 @@ class InOut(ABC):
 
 === Output Format ===
 - Output must be valid JSON (checked with json.loads)
-- Output must have exactly 3 keys: [ title, header_img_description, body ]
-- *Single Line* output example: {"title": "Long, Specific, and SEO Optimized Title", "category_list": ["category_1", "category_2"], "header_img_description": "hyper-detailed description of image to use for header image", "body": "## Intro Paragraph\n\nFollowed by entire rest of article all in raw markdown."}
+- Output must have exactly 3 keys: [ title, category_list, header_img_description, body ]
+- Output must be on a single line with no newline before any keys
+- Output example format: {"title": "Long, Specific, and SEO Optimized Title", "category_list": ["category_1", "category_2"], "header_img_description": "hyper-detailed description of image to use for header image", "body": "## Intro Paragraph\n\nFollowed by entire rest of article all in raw markdown."}
         """
         messages = [
             SystemMessage(content=system_message),
@@ -45,6 +45,7 @@ class InOut(ABC):
                 generated_text = self._llm.invoke(input=messages)
                 generated_text = generated_text.strip()
                 generated_text = generated_text.replace("\n", "\\n")
+                print(f"Generated Text: {generated_text}")
                 loaded_json = json.loads(generated_text)
                 str_expected_keys = [
                     "title",
@@ -73,5 +74,7 @@ class InOut(ABC):
 
 class OllamaInOut(InOut):
     def __init__(self, model_name: str, temperature: int):
+        from langchain.llms.ollama import Ollama
+
         llm = Ollama(model=model_name, temperature=temperature)
         super().__init__(llm)
