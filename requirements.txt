@@ -15,3 +15,4 @@ torch==2.1.2
 transformers==4.36.2
 accelerate==0.25.0
 omegaconf==2.3.0
+xformers --index-url https://download.pytorch.org/whl/cu121

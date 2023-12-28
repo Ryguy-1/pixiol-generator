@@ -17,14 +17,17 @@ def main():
 
     from diffusers import StableDiffusionXLPipeline
 
-    pipeline = StableDiffusionXLPipeline.from_single_file(
+    pipe = StableDiffusionXLPipeline.from_single_file(
         model_path,
         torch_dtype=torch.float16,
-        variant="fp16",
+        use_safetensors=True,
     ).to("cuda")
-    pipeline.enable_xformers_memory_efficient_attention()
+    pipe.enable_model_cpu_offload()
 
-    image = pipeline("test image").images[0]
+    image = pipe(
+        prompt="a couple walking on the beach romantic picture",
+        num_inference_steps=50,
+    ).images[0]
 
     image.save("test.png")
 
