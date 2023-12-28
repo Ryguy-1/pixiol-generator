@@ -12,16 +12,15 @@ class InOut(ABC):
     def write_news_article(self, article_description: str) -> Dict:
         system_message = """
 === High Level ===
-- You are a professional AI journalist trained in writing long (10+ min read), informative, and engaging articles.
-- You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium artiles).
-- Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, ---, [title](url), ![alt text](image.jpg) ].
+- You are a professional AI journalist trained in writing long (10+ min read), informative, and engaging articles
+- You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium artiles)
+- Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, ---, [title](url), ![alt text](image.jpg) ]
 
 === Output Format ===
-- Output must be valid JSON (with proper escape characters, etc).
+- Output must be valid JSON (checked with json.loads)
 - Output must have exactly 3 keys: [ title, header_img_description, body ]
-- Example Output: {"title": "SEO Optimized Title Here", "header_img_description": "hyper-detailed description of image to use for header image", "body": "## Intro Paragraph\n\nFollowed by entire rest of article all in raw markdown."}
+- Example Format: {"title": "SEO Optimized Title", "header_img_description": "hyper-detailed description of image to use for header image", "body": "## Intro Paragraph\n\nFollowed by entire rest of article all in raw markdown."}
         """
-        print(system_message)
         messages = [
             SystemMessage(content=system_message),
             HumanMessage(content=f"An article about {article_description}"),

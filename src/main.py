@@ -5,10 +5,10 @@ def main():
     from llm_generator.in_out import OllamaInOut
 
     llm = OllamaInOut(model_name=OLLAMA_MODEL, temperature=OLLAMA_TEMPERATURE)
-    article = llm.write_news_article(article_description="how to write markdown")
-    print(article.get("title"))
-    print(article.get("header_img_description"))
-    print(article.get("body"))
+    article = llm.write_news_article(article_description="date ideas for the winter")
+    print(f"Title: {article.get('title')}")
+    print(f"Header Image Description: {article.get('header_img_description')}")
+    print(f"Body: {article.get('body')}")
 
     # from api_integration.upload import ContentfulUploadAPI
     # import os
