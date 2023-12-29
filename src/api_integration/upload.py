@@ -10,7 +10,6 @@ import contentful_management
 from PIL import Image
 import uuid
 import io
-import os
 
 
 class UploadAPI(ABC):
