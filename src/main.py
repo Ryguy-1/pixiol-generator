@@ -8,6 +8,7 @@ from datetime import datetime
 
 def main():
     while True:
+        print("Starting New Article Generation Process")
         # Fetch Categories
         fetch_api = ContentfulFetchAPI(
             management_api_token=CONTENTFUL_MANAGEMENT_API_TOKEN,
@@ -16,6 +17,7 @@ def main():
         )
         all_categories = fetch_api.fetch_categories()
         category_constraint = [x.title for x in all_categories]
+        print(f"Categories: {category_constraint}")
 
         # Generate Random Article Ideas
         kill_vram_processes()
@@ -23,12 +25,14 @@ def main():
         article_idea = llm.generate_random_article_description(
             category_init=category_constraint  # use constrain as init prompt
         )
+        print(f"Article Idea: {article_idea}")
 
         # Generate Article For That Idea
         article = llm.write_news_article(
             article_description=article_idea,
             category_constraint=category_constraint,
         )
+        print(f"Article: {article}")
 
         # Generate Image
         kill_vram_processes()
@@ -43,8 +47,10 @@ def main():
             space_id=CONTENTFUL_SPACE_ID,
             environment_id=CONTENTFUL_ENVIRONMENT_ID,
         )
+
         uploaded_asset = upload_api.upload_asset(img)
         print(f"Uploaded Asset: {uploaded_asset}")
+
         uploaded_article = upload_api.upload_news_article(
             title=article["title"],
             content=article["body"],

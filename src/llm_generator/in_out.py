@@ -105,7 +105,6 @@ class InOut(ABC):
                 generated_text = self._llm.invoke(input=messages)
                 generated_text = generated_text.strip()
                 generated_text = self._clean_json_string_newline(generated_text)
-                print(f"Generated Text: {generated_text}")
                 loaded_json = json.loads(generated_text)
                 str_expected_keys = [
                     "title",
@@ -168,7 +167,7 @@ class OllamaInOut(InOut):
             )
             pid = result.stdout.strip()
             if pid:
-                subprocess.run(["sudo", "kill", "-9", pid], check=True)
+                subprocess.run(["kill", "-9", pid], check=True)
                 print(f"Ollama runner with PID {pid} has been successfully killed.")
             else:
                 print("Ollama runner process not found.")
