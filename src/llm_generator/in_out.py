@@ -12,6 +12,46 @@ class InOut(ABC):
     def __init__(self, llm):
         self._llm = llm
 
+    def generate_random_article_description(self, category_init: List[str]) -> str:
+        """
+        Generates a random article description.
+
+        Args:
+            category_init (List[str]): List of categories to get model thinking about.
+
+        Returns:
+            str: Random article description.
+        """
+        system_message = dedent(
+            """
+            === High Level ===
+            - You are a creative and imaginative idea generator who outputs titles for news articles
+            - Ideas must be highly specific (not too broad)
+            - Ideas must not be about events
+            - Ideas must be able to be written about only using text (no images, videos, etc.)
+            - Ideas must be able to be written about in a single article (not a series)
+            - Articles must be appropriate for a general audience (no politics, no religion, no ethics, nothing illegal, etc.)
+
+            === Output Format ===
+            - Output must just be single line description of article
+            - Example: "How to write an API request in Python"
+            """
+        )
+        messages = [
+            SystemMessage(content=system_message),
+            HumanMessage(
+                content=f"Please give me a random article title in one or more of the following categories: {category_init}"
+            ),
+        ]
+        generated_text = self._llm.invoke(input=messages)
+        generated_text = generated_text.replace("\n", " ")
+        generated_text = generated_text.replace("<|im_end|>", "")
+        generated_text = generated_text.replace('"', "")
+        generated_text = generated_text.replace(".", "")
+        generated_text = generated_text.strip()
+
+        return generated_text
+
     def write_news_article(
         self, article_description: str, category_constraint: List[str]
     ) -> Dict:

@@ -91,20 +91,15 @@ class ContentfulFetchAPI(FetchAPI):
     ) -> None:
         """
         Initializes the Contentful API client.
-        If not provided, all variables will be read from the environment.
 
-        Args (default env variables):
-            management_api_token (env: CONTENTFUL_MANAGEMENT_API_TOKEN): The Contentful management API token.
-            space_id (env: CONTENTFUL_SPACE_ID): The ID of the space to upload the asset to.
-            environment_id (env: CONTENTFUL_ENVIRONMENT_ID): The ID of the environment to upload the asset to.
+        Args:
+            management_api_token (str): The Contentful management API token.
+            space_id (str): The ID of the space to upload the asset to.
+            environment_id (str): The ID of the environment to upload the asset to.
         """
-        self._management_api_token = os.environ.get(
-            "CONTENTFUL_MANAGEMENT_API_TOKEN", management_api_token
-        )
-        self._space_id = os.environ.get("CONTENTFUL_SPACE_ID", space_id)
-        self._environment_id = os.environ.get(
-            "CONTENTFUL_ENVIRONMENT_ID", environment_id
-        )
+        self._management_api_token = management_api_token
+        self._space_id = space_id
+        self._environment_id = environment_id
         self._client = contentful_management.Client(self._management_api_token)
 
     def fetch_asset_by_id(self, asset_id: str) -> PersistedAsset:
