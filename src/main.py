@@ -7,47 +7,51 @@ from datetime import datetime
 
 
 def main():
+    fetch_api = ContentfulFetchAPI(
+        management_api_token=CONTENTFUL_MANAGEMENT_API_TOKEN,
+        space_id=CONTENTFUL_SPACE_ID,
+        environment_id=CONTENTFUL_ENVIRONMENT_ID,
+    )
+    llm = OllamaInOut(model_name=OLLAMA_MODEL, temperature=OLLAMA_TEMPERATURE)
+    gen = DiffusersTextToImage(
+        pretrained_model_name_or_path=HUGGINGFACE_DIFFUSERS_PRETRAINED_MODEL_NAME_OR_PATH
+    )
+    upload_api = ContentfulUploadAPI(
+        management_api_token=CONTENTFUL_MANAGEMENT_API_TOKEN,
+        space_id=CONTENTFUL_SPACE_ID,
+        environment_id=CONTENTFUL_ENVIRONMENT_ID,
+    )
     while True:
-        print("Starting New Article Generation Process")
         # Fetch Categories
-        fetch_api = ContentfulFetchAPI(
-            management_api_token=CONTENTFUL_MANAGEMENT_API_TOKEN,
-            space_id=CONTENTFUL_SPACE_ID,
-            environment_id=CONTENTFUL_ENVIRONMENT_ID,
-        )
         all_categories = fetch_api.fetch_categories()
         category_constraint = [x.title for x in all_categories]
-        print(f"Categories: {category_constraint}")
 
         # Generate Random Article Ideas
         kill_vram_processes()
-        llm = OllamaInOut(model_name=OLLAMA_MODEL, temperature=OLLAMA_TEMPERATURE)
         article_idea = llm.generate_random_article_description(
             category_init=category_constraint  # use constrain as init prompt
         )
-        print(f"Article Idea: {article_idea}")
+        print(f"Article Idea: {article_idea}\n\n")
 
         # Generate Article For That Idea
         article = llm.write_news_article(
             article_description=article_idea,
             category_constraint=category_constraint,
         )
-        print(f"Article: {article}")
+        print(f"Title: {article['title']}")
+        print(f"Category List: {article['category_list']}")
+        print(f"Image Description: {article['header_img_description']}")
+        print(f"Body Start: {article['body']}")
+
+        yes_no = input("Publish? (y) or (n): ")
+        if yes_no.lower().strip() == "n":
+            continue
 
         # Generate Image
         kill_vram_processes()
-        gen = DiffusersTextToImage(
-            pretrained_model_name_or_path=HUGGINGFACE_DIFFUSERS_PRETRAINED_MODEL_NAME_OR_PATH
-        )
         img = gen.generate_image(article["header_img_description"])
 
         # Publish Article
-        upload_api = ContentfulUploadAPI(
-            management_api_token=CONTENTFUL_MANAGEMENT_API_TOKEN,
-            space_id=CONTENTFUL_SPACE_ID,
-            environment_id=CONTENTFUL_ENVIRONMENT_ID,
-        )
-
         uploaded_asset = upload_api.upload_asset(img)
         print(f"Uploaded Asset: {uploaded_asset}")
 
