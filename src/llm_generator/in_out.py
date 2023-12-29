@@ -25,7 +25,7 @@ class InOut(ABC):
         system_message = dedent(
             """
             === High Level ===
-            - You are a creative and imaginative writer on medium.com who comes up with great article titles
+            - You are a creative and imaginative AI writer on medium.com who comes up with great article titles
             - All article ideas should be informative and seek to answer questions
             - Ideas must be highly specific (not too broad)
             - Use creative combinations of places, actions, and/or things
