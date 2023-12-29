@@ -1,7 +1,11 @@
 from abc import ABC
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain.llms.ollama import Ollama
 from typing import Dict, List
+from textwrap import dedent
+import subprocess
 import json
+import re
 
 
 class InOut(ABC):
@@ -20,19 +24,35 @@ class InOut(ABC):
 
         Returns:
             Dict: News article.
-        """
-        system_message = """
-=== High Level ===
-- You are a professional AI journalist trained in writing long (10+ min read), informative, and engaging articles
-- You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium artiles)
-- Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, ---, [title](url), ![alt text](image.jpg) ]
 
-=== Output Format ===
-- Output must be valid JSON (checked with json.loads)
-- Output must have exactly 3 keys: [ title, category_list, header_img_description, body ]
-- Output must be on a single line with no newline before any keys
-- Output example format: {"title": "Long, Specific, and SEO Optimized Title", "category_list": ["category_1", "category_2"], "header_img_description": "hyper-detailed description of image to use for header image", "body": "## Intro Paragraph\n\nFollowed by entire rest of article all in raw markdown."}
+        Return Format:
+            {
+                "title": "Title Here"
+                "category_list": ["category_1", "category_2"],
+                "header_img_description": "Description of Header Image",
+                "body": "## Intro Paragraph\n\nFollowed by entire rest of article all in raw markdown."
+            }
         """
+        system_message = dedent(
+            """
+            === High Level ===
+            - You are a professional AI journalist trained in writing long (10+ min read), informative, and engaging articles
+            - You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium artiles)
+            - Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, ---, [title](url), ![alt text](image.jpg) ]
+
+            === Output Format ===
+            - Output must be valid JSON (checked with json.loads)
+            - Output must have exactly 4 keys: [ title, category_list, header_img_description, body ]
+            - Output example format: 
+                {
+                    "title": "Long, Specific, and SEO Optimized Title", 
+                    "category_list": ["category_1", "category_2"], 
+                    "header_img_description": "hyper-detailed description of image to use for header image", 
+                    "body": "## Article Here\\n\\nEntire rest of article all in raw markdown."
+                }
+            """
+        )
+        print(system_message)
         messages = [
             SystemMessage(content=system_message),
             HumanMessage(
@@ -44,7 +64,7 @@ class InOut(ABC):
             try:
                 generated_text = self._llm.invoke(input=messages)
                 generated_text = generated_text.strip()
-                generated_text = generated_text.replace("\n", "\\n")
+                generated_text = self._clean_json_string_newline(generated_text)
                 print(f"Generated Text: {generated_text}")
                 loaded_json = json.loads(generated_text)
                 str_expected_keys = [
@@ -71,10 +91,40 @@ class InOut(ABC):
             except Exception as e:
                 print(str(e))
 
+    def _clean_json_string_newline(self, json_string: str) -> str:
+        """
+        Replaces internal newlines with escaped newlines in JSON string.
+
+        Args:
+            json_string (str): JSON string.
+
+        Returns:
+            str: JSON string with internal newlines replaced with escaped newlines.
+        """
+
+        def replace_newlines(match):
+            return match.group(0).replace("\n", "\\n")
+
+        return re.sub(r'\"([^"]*)\"', replace_newlines, json_string)
+
 
 class OllamaInOut(InOut):
     def __init__(self, model_name: str, temperature: int):
-        from langchain.llms.ollama import Ollama
-
         llm = Ollama(model=model_name, temperature=temperature)
         super().__init__(llm)
+
+    @staticmethod
+    def kill():
+        """Finds and kills the Ollama runner process. Useful for freeing up VRAM. (must run as sudo)"""
+        try:
+            result = subprocess.run(
+                ["pgrep", "-f", "ollama-runner"], capture_output=True, text=True
+            )
+            pid = result.stdout.strip()
+            if pid:
+                subprocess.run(["sudo", "kill", "-9", pid], check=True)
+                print(f"Ollama runner with PID {pid} has been successfully killed.")
+            else:
+                print("Ollama runner process not found.")
+        except subprocess.CalledProcessError as e:
+            print(f"Error: {e}")

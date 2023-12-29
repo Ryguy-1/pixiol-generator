@@ -10,12 +10,13 @@ import os
 
 
 def main():
-    publish_new_article(
-        article_description="top 10 things to do with your dog in the summer in san diego"
-    )
+    publish_new_article(article_description="how to write an api request in python")
 
 
 def publish_new_article(article_description: str) -> None:
+    OllamaInOut.kill()
+    wait_for_vram_availability(threshold_gb=6.0)
+
     fetch_api = ContentfulFetchAPI(
         management_api_token=CONTENTFUL_MANAGEMENT_API_TOKEN,
         space_id=CONTENTFUL_SPACE_ID,
@@ -39,8 +40,8 @@ def publish_new_article(article_description: str) -> None:
     ]
     print(f"Chosen Categories: {[x.title for x in chosen_categories]}")
 
-    # # Wait for VRAM to be available
-    # wait_for_vram_availability(threshold_gb=6)
+    OllamaInOut.kill()
+    wait_for_vram_availability(threshold_gb=6.0)
 
     gen = LocalSDXLTextToImage(model_path=os.path.join(SDXL_PATH))
     img = gen.generate_image(article["header_img_description"])

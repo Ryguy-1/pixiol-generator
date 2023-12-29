@@ -8,6 +8,7 @@ from api_integration.data_models import (
 from datetime import datetime
 import contentful_management
 from PIL import Image
+import time
 import uuid
 import io
 import os
@@ -133,9 +134,15 @@ class ContentfulUploadAPI(UploadAPI):
             },
         )
         asset.process()
-        asset = self._client.assets(self._space_id, self._environment_id).find(
-            asset.id
-        )  # refresh
+        fst = True
+        while not asset.fields().get("file", {}).get("url"):
+            if not fst:
+                print("waiting for asset to process...")
+                time.sleep(1)
+            asset = self._client.assets(self._space_id, self._environment_id).find(
+                asset.id
+            )
+            fst = False
         asset.publish()
         return PersistedAsset(id=asset.id, url=f"https:{asset.fields()['file']['url']}")
 
