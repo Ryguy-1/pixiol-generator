@@ -115,7 +115,10 @@ class OllamaInOut(InOut):
 
     @staticmethod
     def kill():
-        """Finds and kills the Ollama runner process. Useful for freeing up VRAM. (must run as sudo)"""
+        """
+        Finds and kills the Ollama runner process. Useful for freeing up VRAM. 
+        (must run as sudo, should be ok in docker container)
+        """
         try:
             result = subprocess.run(
                 ["pgrep", "-f", "ollama-runner"], capture_output=True, text=True
