@@ -4,7 +4,6 @@ from diffusion_generator.text_to_image import DiffusersTextToImage
 from api_integration.upload import ContentfulUploadAPI
 from api_integration.fetch import ContentfulFetchAPI
 from datetime import datetime
-from inquirer import prompt, Confirm
 
 
 def main():
@@ -29,9 +28,7 @@ def main():
 
         # Generate Random Article Ideas
         kill_vram_processes()
-        article_idea = llm.generate_random_article_description(
-            category_init=category_constraint  # use constrain as init prompt
-        )
+        article_idea = llm.generate_random_article_description()
         print(f"Article Idea: {article_idea}\n\n")
 
         # Generate Article For That Idea
@@ -43,19 +40,6 @@ def main():
         print(f"Category List: {article['category_list']}")
         print(f"Image Description: {article['header_img_description']}")
         print(f"Body Start: {article['body']}")
-
-        # ask if should publish
-        should_publish = prompt(
-            [
-                Confirm(
-                    "should_publish",
-                    message="Should Publish?",
-                    default=False,
-                )
-            ]
-        )["should_publish"]
-        if not should_publish:
-            continue
 
         # Generate Image
         kill_vram_processes()
@@ -75,19 +59,6 @@ def main():
             ],
         )
         print(f"Uploaded Article: {uploaded_article}")
-
-        # ask if should generate another
-        should_generate_another = prompt(
-            [
-                Confirm(
-                    "should_generate_another",
-                    message="Should Generate Another?",
-                    default=True,
-                )
-            ]
-        )["should_generate_another"]
-        if not should_generate_another:
-            break
 
 
 def kill_vram_processes() -> None:

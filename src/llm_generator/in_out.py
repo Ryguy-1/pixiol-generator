@@ -12,12 +12,12 @@ class InOut(ABC):
     def __init__(self, llm):
         self._llm = llm
 
-    def generate_random_article_description(self, category_init: List[str]) -> str:
+    def generate_random_article_description(self) -> str:
         """
         Generates a random article description.
 
         Args:
-            category_init (List[str]): List of categories to get model thinking about.
+            phrase_init (str): Word to initialize the article description with.
 
         Returns:
             str: Random article description.
@@ -25,23 +25,22 @@ class InOut(ABC):
         system_message = dedent(
             """
             === High Level ===
-            - You are a creative and imaginative idea generator who outputs titles for news articles
+            - You are a creative and imaginative writer on medium.com who comes up with great article titles
+            - All article ideas should be informative and seek to answer questions
             - Ideas must be highly specific (not too broad)
-            - Ideas must not be about events
-            - Ideas must be able to be written about only using text (no images, videos, etc.)
-            - Ideas must be able to be written about in a single article (not a series)
-            - Articles must be appropriate for a general audience (no politics, no religion, no ethics, nothing illegal, etc.)
+            - Use creative combinations of places, actions, and/or things
+            - Use unique starting phrases
+            - Ideas must be interesting for the rest of time (not time-sensitive content)
+            - Ideas must be appropriate for a general audience (no politics, no religion, no ethics, nothing illegal, etc.)
 
             === Output Format ===
-            - Output must just be single line description of article
-            - Example: "How to write an API request in Python"
+            - Output must just be single line article title
+            - Output example format (only your final title and nothing more): "How to Write an API Request in Python"
             """
         )
         messages = [
             SystemMessage(content=system_message),
-            HumanMessage(
-                content=f"Please give me a random article title in one or more of the following categories: {category_init}"
-            ),
+            HumanMessage(content=f"Please give me one idea exactly."),
         ]
         generated_text = self._llm.invoke(input=messages)
         generated_text = generated_text.replace("\n", " ")
@@ -77,7 +76,7 @@ class InOut(ABC):
             """
             === High Level ===
             - You are a professional AI journalist trained in writing long (10+ min read), informative, and engaging articles
-            - You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium artiles)
+            - You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium.com articles)
             - Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, ---, [title](url), ![alt text](image.jpg) ]
 
             === Output Format ===
@@ -92,7 +91,6 @@ class InOut(ABC):
                 }
             """
         )
-        print(system_message)
         messages = [
             SystemMessage(content=system_message),
             HumanMessage(
