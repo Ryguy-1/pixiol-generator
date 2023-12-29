@@ -8,7 +8,6 @@ from api_integration.data_models import (
 from datetime import datetime
 import contentful_management
 from PIL import Image
-import time
 import uuid
 import io
 import os
@@ -79,29 +78,19 @@ class ContentfulUploadAPI(UploadAPI):
         Initializes the Contentful API client.
         If not provided, all variables will be read from the environment.
 
-        Args:
-            management_api_token: The Contentful management API token.
-            space_id: The ID of the space to upload the asset to.
-            environment_id: The ID of the environment to upload the asset to.
-
-        Environment Variables:
-            CONTENTFUL_MANAGEMENT_API_TOKEN
-            CONTENTFUL_SPACE_ID
-            CONTENTFUL_ENVIRONMENT_ID
+        Args (default env variables):
+            management_api_token (env: CONTENTFUL_MANAGEMENT_API_TOKEN): The Contentful management API token.
+            space_id (env: CONTENTFUL_SPACE_ID): The ID of the space to upload the asset to.
+            environment_id (env: CONTENTFUL_ENVIRONMENT_ID): The ID of the environment to upload the asset to.
         """
-        if management_api_token is None:
-            management_api_token = os.environ["CONTENTFUL_MANAGEMENT_API_TOKEN"]
-        if space_id is None:
-            space_id = os.environ["CONTENTFUL_SPACE_ID"]
-        if environment_id is None:
-            environment_id = os.environ["CONTENTFUL_ENVIRONMENT_ID"]
-        if None in [management_api_token, space_id, environment_id]:
-            raise ValueError(
-                "Must Set CONTENTFUL_MANAGEMENT_API_TOKEN, CONTENTFUL_SPACE_ID, and CONTENTFUL_ENVIRONMENT_ID"
-            )
-        self._client = contentful_management.Client(management_api_token)
-        self._space_id = space_id
-        self._environment_id = environment_id
+        self._management_api_token = os.environ.get(
+            "CONTENTFUL_MANAGEMENT_API_TOKEN", management_api_token
+        )
+        self._space_id = os.environ.get("CONTENTFUL_SPACE_ID", space_id)
+        self._environment_id = os.environ.get(
+            "CONTENTFUL_ENVIRONMENT_ID", environment_id
+        )
+        self._client = contentful_management.Client(self._management_api_token)
 
     def upload_asset(self, pil_image: Image) -> PersistedAsset:
         unique_id = str(uuid.uuid4())
@@ -134,15 +123,12 @@ class ContentfulUploadAPI(UploadAPI):
             },
         )
         asset.process()
-        fst = True
-        while not asset.fields().get("file", {}).get("url"):
-            if not fst:
-                print("waiting for asset to process...")
-                time.sleep(1)
+        while (
+            not asset.fields().get("file", {}).get("url")
+        ):  # Wait for the asset to be processed (network time = delay as is very fast to process)
             asset = self._client.assets(self._space_id, self._environment_id).find(
                 asset.id
             )
-            fst = False
         asset.publish()
         return PersistedAsset(id=asset.id, url=f"https:{asset.fields()['file']['url']}")
 

@@ -11,9 +11,6 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Ollama
-RUN curl https://ollama.ai/install.sh | sh
-
 # Copy your requirements.txt file into the container
 COPY requirements.txt .
 
