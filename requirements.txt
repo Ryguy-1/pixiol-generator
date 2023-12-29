@@ -17,3 +17,4 @@ accelerate==0.25.0
 omegaconf==2.3.0
 xformers --index-url https://download.pytorch.org/whl/cu121
 GPUtil==1.4.0
+inquirer==3.1.4

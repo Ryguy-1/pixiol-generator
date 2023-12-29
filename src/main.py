@@ -4,6 +4,7 @@ from diffusion_generator.text_to_image import DiffusersTextToImage
 from api_integration.upload import ContentfulUploadAPI
 from api_integration.fetch import ContentfulFetchAPI
 from datetime import datetime
+from inquirer import prompt, Confirm
 
 
 def main():
@@ -43,8 +44,17 @@ def main():
         print(f"Image Description: {article['header_img_description']}")
         print(f"Body Start: {article['body']}")
 
-        yes_no = input("Publish? (y) or (n): ")
-        if yes_no.lower().strip() == "n":
+        # ask if should publish
+        should_publish = prompt(
+            [
+                Confirm(
+                    "should_publish",
+                    message="Should Publish?",
+                    default=False,
+                )
+            ]
+        )["should_publish"]
+        if not should_publish:
             continue
 
         # Generate Image
@@ -65,6 +75,19 @@ def main():
             ],
         )
         print(f"Uploaded Article: {uploaded_article}")
+
+        # ask if should generate another
+        should_generate_another = prompt(
+            [
+                Confirm(
+                    "should_generate_another",
+                    message="Should Generate Another?",
+                    default=True,
+                )
+            ]
+        )["should_generate_another"]
+        if not should_generate_another:
+            break
 
 
 def kill_vram_processes() -> None:
