@@ -6,7 +6,6 @@ from api_integration.data_models import (
     PersistedNewsArticle,
 )
 import contentful_management
-import os
 
 
 class FetchAPI(ABC):
