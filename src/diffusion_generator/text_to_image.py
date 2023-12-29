@@ -19,25 +19,26 @@ class TextToImage(ABC):
         pass
 
 
-class LocalSDXLTextToImage(TextToImage):
+class DiffusersTextToImage(TextToImage):
     def __init__(
-        self, model_path: str, num_inference_steps: Optional[int] = 50
+        self,
+        pretrained_model_name_or_path: str,
+        num_inference_steps: Optional[int] = 50,
     ) -> None:
         """
         Loads local SDXL model.
 
         Args:
-            model_path (str): Path to SDXL model.
+            pretrained_model_name_or_path (str): Huggingface Diffusers Download Path.
             num_inference_steps (int, optional): Number of inference steps. Defaults to 50.
         """
-        from diffusers import StableDiffusionXLPipeline
+        from diffusers import DiffusionPipeline
 
-        self._model_path = model_path
+        self._pretrained_model_name_or_path = pretrained_model_name_or_path
         self._num_inference_steps = num_inference_steps
-        self._pipe = StableDiffusionXLPipeline.from_single_file(
-            model_path,
+        self._pipe = DiffusionPipeline.from_pretrained(
+            self._pretrained_model_name_or_path,
             torch_dtype=torch.float16,
-            use_safetensors=True,
         ).to("cuda")
         self._pipe.enable_sequential_cpu_offload()
 

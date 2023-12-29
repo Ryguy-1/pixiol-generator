@@ -1,6 +1,6 @@
 from config import *
 from llm_generator.in_out import OllamaInOut
-from diffusion_generator.text_to_image import LocalSDXLTextToImage
+from diffusion_generator.text_to_image import DiffusersTextToImage
 from api_integration.upload import ContentfulUploadAPI
 from api_integration.fetch import ContentfulFetchAPI
 from datetime import datetime
@@ -43,7 +43,9 @@ def publish_new_article(article_description: str) -> None:
     OllamaInOut.kill()
     wait_for_vram_availability(threshold_gb=6.0)
 
-    gen = LocalSDXLTextToImage(model_path=os.path.join(SDXL_PATH))
+    gen = DiffusersTextToImage(
+        pretrained_model_name_or_path=HUGGINGFACE_DIFFUSERS_PRETRAINED_MODEL_NAME_OR_PATH
+    )
     img = gen.generate_image(article["header_img_description"])
 
     upload_api = ContentfulUploadAPI(
