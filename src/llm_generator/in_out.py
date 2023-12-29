@@ -27,9 +27,9 @@ class InOut(ABC):
             === High Level ===
             - You are a creative and imaginative AI writer on medium.com who comes up with great article titles
             - All article ideas should be informative and seek to answer questions
-            - Ideas must be highly specific (not too broad)
             - Use creative combinations of places, actions, and/or things
             - Use unique starting phrases
+            - Ideas must be highly specific (not too broad)
             - Ideas must be interesting for the rest of time (not time-sensitive content)
             - Ideas must be appropriate for a general audience (no politics, no religion, no ethics, nothing illegal, etc.)
 
@@ -77,6 +77,7 @@ class InOut(ABC):
             === High Level ===
             - You are a professional AI journalist trained in writing long (10+ min read), informative, and engaging articles
             - You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium.com articles)
+            - Your article must be at least 1000 words in length - this is important because it should have a medium.com-level of detail (very in depth)
             - Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, ---, [title](url), ![alt text](image.jpg) ]
 
             === Output Format ===
@@ -101,7 +102,7 @@ class InOut(ABC):
         while True:
             try:
                 generated_text = self._llm.invoke(input=messages)
-                generated_text = generated_text.strip()
+                generated_text = generated_text.replace("<|im_end|>", "")
                 generated_text = self._clean_json_string_newline(generated_text)
                 loaded_json = json.loads(generated_text)
                 str_expected_keys = [
