@@ -110,13 +110,16 @@ class InOut(ABC):
 
 class OllamaInOut(InOut):
     def __init__(self, model_name: str, temperature: int):
+        print(f"Pulling Ollama model: {model_name}")
+        subprocess.run(["ollama", "pull", model_name], check=True)
+        print(f"Running Ollama model: {model_name}")
         llm = Ollama(model=model_name, temperature=temperature)
         super().__init__(llm)
 
     @staticmethod
     def kill():
         """
-        Finds and kills the Ollama runner process. Useful for freeing up VRAM. 
+        Finds and kills the Ollama runner process. Useful for freeing up VRAM.
         (must run as sudo, should be ok in docker container)
         """
         try:

@@ -1,5 +1,5 @@
 # Use the official NVIDIA CUDA base image as the base image
-FROM nvidia/cuda:11.0-base
+FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -13,9 +13,6 @@ RUN apt-get update && apt-get install -y \
 
 # Install Ollama
 RUN curl https://ollama.ai/install.sh | sh
-
-# Pull the "mistral-openorca" repository
-RUN ollama pull mistral-openorca
 
 # Copy your requirements.txt file into the container
 COPY requirements.txt .
