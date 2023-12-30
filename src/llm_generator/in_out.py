@@ -79,7 +79,7 @@ class InOut(ABC):
             - You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium.com articles)
             - Your article must be at least 1000 words in length - this is important because it should have a medium.com-level of detail (very in depth)
             - Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, --- ]
-
+            
             === Output Format ===
             - Output must be valid JSON (checked with json.loads)
             - Output must have exactly 4 keys: [ title, category_list, header_img_description, body ]
