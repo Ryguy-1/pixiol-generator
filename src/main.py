@@ -1,6 +1,7 @@
 from config import *
 from llm_generator.in_out import OllamaInOut
 from diffusion_generator.text_to_image import DiffusersTextToImage
+from classifiers.nsfw_classify import HuggingfaceNSFWClassify
 from api_integration.upload import ContentfulUploadAPI
 from api_integration.fetch import ContentfulFetchAPI
 from datetime import datetime
@@ -15,6 +16,7 @@ def main() -> None:
                 llm_idea_generator,
                 llm_writer,
                 gen,
+                nsfw_classify,
                 upload_api,
             ) = initialize_apis()
 
@@ -39,7 +41,14 @@ def main() -> None:
 
             # Generate Image
             kill_vram_processes()
-            img = gen.generate_image(article["header_img_description"])
+            img = gen.generate_image(
+                prompt=article["header_img_description"],
+                negative_prompt=NEGATIVE_PROMPT_FILTER,
+            )
+
+            if nsfw_classify.check_is_nsfw(img):
+                print("NSFW Image Detected, Skipping...")
+                continue
 
             # Publish Article
             uploaded_asset = upload_api.upload_asset(img)
@@ -74,12 +83,15 @@ def initialize_apis():
     gen = DiffusersTextToImage(
         pretrained_model_name_or_path=HUGGINGFACE_DIFFUSERS_PRETRAINED_MODEL_NAME_OR_PATH
     )
+    nsfw_classify = HuggingfaceNSFWClassify(
+        pretrained_model_name_or_path=HUGGINGFACE_NSFW_CLASSIFIER_PRETRAINED_MODEL_NAME_OR_PATH
+    )
     upload_api = ContentfulUploadAPI(
         management_api_token=CONTENTFUL_MANAGEMENT_API_TOKEN,
         space_id=CONTENTFUL_SPACE_ID,
         environment_id=CONTENTFUL_ENVIRONMENT_ID,
     )
-    return fetch_api, llm_idea_generator, llm_writer, gen, upload_api
+    return fetch_api, llm_idea_generator, llm_writer, gen, nsfw_classify, upload_api
 
 
 def kill_vram_processes() -> None:
