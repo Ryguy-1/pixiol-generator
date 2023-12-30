@@ -7,10 +7,17 @@ from datetime import datetime
 
 
 def main():
-    fetch_api, llm_idea_generator, llm_writer, gen, upload_api = initialize_apis()
-
     while True:
         try:
+            # Reinitalize APIs
+            (
+                fetch_api,
+                llm_idea_generator,
+                llm_writer,
+                gen,
+                upload_api,
+            ) = initialize_apis()
+
             # Fetch Categories
             all_categories = fetch_api.fetch_categories()
             category_constraint = [x.title for x in all_categories]
@@ -50,13 +57,6 @@ def main():
             print(f"Uploaded Article: {uploaded_article}")
         except Exception as e:
             print(str(e))
-            (
-                fetch_api,
-                llm_idea_generator,
-                llm_writer,
-                gen,
-                upload_api,
-            ) = initialize_apis()
 
 
 def initialize_apis():
