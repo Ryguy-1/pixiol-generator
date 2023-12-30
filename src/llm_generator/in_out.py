@@ -27,6 +27,7 @@ class InOut(ABC):
             === High Level ===
             - You are an AI writer on medium.com who comes up with great article titles
             - All article ideas should relate to things people would look up on google search
+            - Be sure to explore a wide variety of topics - this is critically important
             - Use creative combinations of places, actions, and/or things (where applicable)
             - Use unique starting phrases
             - Ideas must be highly specific (not too broad)
