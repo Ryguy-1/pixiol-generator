@@ -5,6 +5,7 @@ from classifiers.nsfw_classify import HuggingfaceNSFWClassify
 from api_integration.upload import ContentfulUploadAPI
 from api_integration.fetch import ContentfulFetchAPI
 from datetime import datetime
+import random
 
 
 def main() -> None:
@@ -22,11 +23,16 @@ def main() -> None:
 
             # Fetch Categories
             all_categories = fetch_api.fetch_categories()
+            if len(all_categories) == 0:
+                quit("No Categories Found, Exiting...")
             category_constraint = [x.title for x in all_categories]
 
             # Generate Random Article Ideas
             kill_vram_processes()
-            article_idea = llm_idea_generator.generate_random_article_description()
+            random_category = random.choice(category_constraint)
+            article_idea = llm_idea_generator.generate_random_article_idea(
+                category_injection=random_category
+            )
             print(f"Article Idea: {article_idea}\n\n")
 
             # Generate Article For That Idea

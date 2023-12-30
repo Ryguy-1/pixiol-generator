@@ -1,5 +1,6 @@
 from abc import ABC
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain.llms.base import BaseLLM
 from langchain.llms.ollama import Ollama
 from typing import Dict, List
 from textwrap import dedent
@@ -9,43 +10,48 @@ import re
 
 
 class InOut(ABC):
-    def __init__(self, llm):
+    """InOut class for interacting with LLMs."""
+
+    def __init__(self, llm: BaseLLM) -> None:
+        """Initializes InOut class."""
         self._llm = llm
 
-    def generate_random_article_description(self) -> str:
+    def generate_random_article_idea(self, category_injection: str) -> str:
         """
-        Generates a random article description.
+        Generates a random article idea.
 
         Args:
-            phrase_init (str): Word to initialize the article description with.
+            phrase_init (str): Word to initialize the article idea with.
+            category_injection (str): Category to inject into prompt for latent space activation.
 
         Returns:
-            str: Random article description.
+            str: Random article idea.
         """
         system_message = dedent(
             """
             === High Level ===
-            - You are an AI writer on medium.com who comes up with great article titles
-            - All article ideas should relate to things people would look up on google search
-            - Be sure to explore a wide variety of topics - this is critically important
-            - Use creative combinations of actions, places, and/or things (where applicable)
-            - Use unique starting phrases
-            - Ideas must be highly specific (not too broad)
+            - You are an AI writer on medium.com who comes up with great article ideas (single phrase ideas similar to titles)
+            - All article ideas should answer questions people search for on Google
+            - Be sure to explore a wide variety of topics - this is critically important (ideate in all categories equally)
+            - Both domain-specific and general topics are allowed, and a mix of both is encouraged
+            - Ideas shuold be hyper-sepcific and long-tail
             - Ideas must be interesting for the rest of time (not time-sensitive content)
-            - Ideas must be appropriate for a general audience (no politics, no religion, no ethics, nothing illegal, etc.)
+            - Ideas must be non-controvertial in any way (no politics, no religion, no ethics, nothing illegal, etc.)
 
             === Output Format ===
-            - Output must just be single line article title
-            - Output example format (only your final title and nothing more): "How to Write an API Request in Python"
+            - Output must just be single line article idea (no JSON, no newlines, etc.)
             """
         )
+
         messages = [
             SystemMessage(content=system_message),
-            HumanMessage(content=f"Please give me one idea exactly."),
+            HumanMessage(
+                content=f"Request: 'Please give me one idea exactly', Broad Category Idea: '{category_injection}'"
+            ),
         ]
         generated_text = self._llm.invoke(input=messages)
-        generated_text = generated_text.replace("\n", " ")
         generated_text = generated_text.replace("<|im_end|>", "")
+        generated_text = generated_text.replace("\n", " ")
         generated_text = generated_text.replace('"', "")
         generated_text = generated_text.replace(".", "")
         generated_text = generated_text.strip()
@@ -53,13 +59,13 @@ class InOut(ABC):
         return generated_text
 
     def write_news_article(
-        self, article_description: str, category_constraint: List[str]
+        self, article_idea: str, category_constraint: List[str]
     ) -> Dict:
         """
         Writes a news article.
 
         Args:
-            article_description (str): Description of article.
+            article_idea (str): Idea for article.
             category_constraint (List[str]): List of categories to constrain output selection to.
 
         Returns:
@@ -98,7 +104,7 @@ class InOut(ABC):
         messages = [
             SystemMessage(content=system_message),
             HumanMessage(
-                content=f"Article Description: '{article_description}', Categories to Choose From: {category_constraint}"
+                content=f"Article Idea: '{article_idea}', Categories to Choose From: {category_constraint}"
             ),
         ]
 
@@ -106,7 +112,7 @@ class InOut(ABC):
             try:
                 generated_text = self._llm.invoke(input=messages)
                 generated_text = generated_text.replace("<|im_end|>", "")
-                generated_text = self._clean_json_string_newline(generated_text)
+                generated_text = self._clean_output_json_newline(generated_text)
                 loaded_json = json.loads(generated_text)
                 str_expected_keys = [
                     "title",
@@ -133,7 +139,7 @@ class InOut(ABC):
                 print(str(e))
 
     @staticmethod
-    def _clean_json_string_newline(json_string: str) -> str:
+    def _clean_output_json_newline(json_string: str) -> str:
         """
         Replaces internal newlines with escaped newlines in JSON string.
 
