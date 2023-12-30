@@ -4,6 +4,7 @@ from diffusion_generator.text_to_image import DiffusersTextToImage
 from api_integration.upload import ContentfulUploadAPI
 from api_integration.fetch import ContentfulFetchAPI
 from datetime import datetime
+import time
 
 
 def main():
@@ -21,6 +22,7 @@ def main():
         space_id=CONTENTFUL_SPACE_ID,
         environment_id=CONTENTFUL_ENVIRONMENT_ID,
     )
+    time.sleep(100_000_000)
     while True:
         # Fetch Categories
         all_categories = fetch_api.fetch_categories()
