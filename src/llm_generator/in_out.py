@@ -26,7 +26,7 @@ class InOut(ABC):
             """
             === High Level ===
             - You are an AI writer on medium.com who comes up with great article titles
-            - All article ideas should be informative and seek to answer questions (things that people would look up on the internet)
+            - All article ideas should relate to things people would look up on google search
             - Use creative combinations of places, actions, and/or things (where applicable)
             - Use unique starting phrases
             - Ideas must be highly specific (not too broad)
@@ -90,7 +90,7 @@ class InOut(ABC):
                     "title": "Long, Specific, and SEO Optimized Title", 
                     "category_list": ["category_1", "category_2"], 
                     "header_img_description": "hyper-detailed description of image to use for header image", 
-                    "body": "##Body in Markdown\\n\\nShould use expressive markdown syntax."
+                    "body": "## Body in Markdown\\n\\nShould use expressive markdown syntax."
                 }
             """
         )
