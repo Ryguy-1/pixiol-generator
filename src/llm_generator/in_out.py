@@ -94,10 +94,10 @@ class InOut(ABC):
             - Output must have exactly 4 keys: [ title, category_list, header_img_description, body ]
             - Output example format: 
                 {
-                    "title": "Long, Specific, and SEO Optimized Title", 
-                    "category_list": ["category_1", "category_2"], 
-                    "header_img_description": "hyper-detailed description of image to use for header image", 
-                    "body": "## Body in Markdown\\n\\nShould use expressive markdown syntax."
+                    "title": "<Long, Specific, and SEO Optimized Title>", 
+                    "category_list": <["category_1", "category_2"]>, 
+                    "header_img_description": "<hyper-detailed description of image to use for header image>", 
+                    "body": "<## Body in Markdown\\n\\nShould use expressive markdown syntax.>"
                 }
             """
         )
