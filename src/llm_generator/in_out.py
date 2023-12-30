@@ -90,7 +90,7 @@ class InOut(ABC):
                     "title": "Long, Specific, and SEO Optimized Title", 
                     "category_list": ["category_1", "category_2"], 
                     "header_img_description": "hyper-detailed description of image to use for header image", 
-                    "body": "## Begin Body in Markdown Here\\n\\nHere is where you write the entire article from start to the very end all in markdown."
+                    "body": "##Body in Markdown\\n\\nShould use expressive markdown syntax."
                 }
             """
         )
