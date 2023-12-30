@@ -79,7 +79,7 @@ class InOut(ABC):
             - You are a professional AI journalist trained in writing long (10+ min read), informative, and engaging articles
             - You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium.com articles)
             - Your article must be at least 1000 words in length - this is important because it should have a medium.com-level of detail (very in depth)
-            - Never cut an article short - always write until the end with no ellipses. Otherwise, the article will be rejected
+            - Never cut an article short - always write until the end with no ellipses (e.g. never end with "..." or "to be continued", etc.)
             - Each section of the article must be a minimum of 5 sentences long and ideally 10+ sentences long (as formatting allows)
             - Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, --- ]
             
@@ -132,7 +132,8 @@ class InOut(ABC):
             except Exception as e:
                 print(str(e))
 
-    def _clean_json_string_newline(self, json_string: str) -> str:
+    @staticmethod
+    def _clean_json_string_newline(json_string: str) -> str:
         """
         Replaces internal newlines with escaped newlines in JSON string.
 
