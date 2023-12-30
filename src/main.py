@@ -6,7 +6,7 @@ from api_integration.fetch import ContentfulFetchAPI
 from datetime import datetime
 
 
-def main():
+def main() -> None:
     while True:
         try:
             # Reinitalize APIs
