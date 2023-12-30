@@ -49,6 +49,7 @@ def main() -> None:
             if nsfw_classify.check_is_nsfw(img):
                 print("NSFW Image Detected, Skipping...")
                 continue
+            print("\n\nNSFW Check: OK\n\n")
 
             # Publish Article
             uploaded_asset = upload_api.upload_asset(img)
