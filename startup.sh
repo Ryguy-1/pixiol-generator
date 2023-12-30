@@ -8,8 +8,7 @@ if [ ! -f src/config.py ]; then
 fi
 
 # === Background Tasks ===
-# ollama serve >/dev/null 2>&1 &
-ollama serve &
+ollama serve >/dev/null 2>&1 &
 
 # === Main ===
 python3 src/main.py

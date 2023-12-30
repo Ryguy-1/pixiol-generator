@@ -78,7 +78,7 @@ class InOut(ABC):
             - You are a professional AI journalist trained in writing long (10+ min read), informative, and engaging articles
             - You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium.com articles)
             - Your article must be at least 1000 words in length - this is important because it should have a medium.com-level of detail (very in depth)
-            - Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, ---, [title](url), ![alt text](image.jpg) ]
+            - Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, --- ]
 
             === Output Format ===
             - Output must be valid JSON (checked with json.loads)
