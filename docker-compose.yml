@@ -4,20 +4,7 @@ services:
     build: .
     volumes:
       - huggingface_cache:/root/.cache/huggingface
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    depends_on:
-      - ollama
-
-  ollama:
-    image: ollama/ollama
-    volumes:
-      - ollama_data:/root/.ollama
+      - ollama_cache:/root/.ollama
     deploy:
       resources:
         reservations:
@@ -28,4 +15,4 @@ services:
 
 volumes:
   huggingface_cache:
-  ollama_data:
+  ollama_cache:
