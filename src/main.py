@@ -37,7 +37,7 @@ def main() -> None:
 
             # Generate Article For That Idea
             article = llm_writer.write_news_article(
-                article_description=article_idea,
+                article_idea=article_idea,
                 category_constraint=category_constraint,
             )
             print(f"Title: {article['title']}")
