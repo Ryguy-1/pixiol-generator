@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain.llms.base import BaseLLM
 from langchain.llms.ollama import Ollama
@@ -11,6 +11,46 @@ import re
 
 class InOut(ABC):
     """InOut class for interacting with LLMs."""
+
+    SYSTEM_PROMPTS = {
+        "generate_random_article_idea": dedent(
+            """
+            === High Level ===
+            - You are an AI writer on medium.com who comes up with great article ideas (single phrase ideas similar to titles)
+            - All article ideas should answer questions people search for on Google
+            - Be sure to explore a wide variety of topics - this is critically important
+            - Both domain-specific and general topics are allowed, and a mix of both is encouraged
+            - Ideas shuold be hyper-sepcific and long-tail
+            - Ideas must be interesting for the rest of time (not time-sensitive content)
+            - Ideas must be non-controvertial in any way (no politics, no religion, no ethics, nothing illegal, etc.)
+
+            === Output Format ===
+            - Output must just be single line article idea (no JSON, no newlines, etc.)
+            """
+        ),
+        "write_news_article": dedent(
+            """
+            === High Level ===
+            - You are a professional AI journalist trained in writing long (10+ min read), informative, and engaging articles
+            - You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium.com articles)
+            - Your article must be at least 1000 words in length - this is important because it should have a medium.com-level of detail (very in depth)
+            - Never cut an article short - always write until the end with no ellipses (e.g. never end with "..." or "to be continued", etc.)
+            - Each section of the article must be a minimum of 5 sentences long and ideally 10+ sentences long (as formatting allows)
+            - Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, --- ]
+            
+            === Output Format ===
+            - Output must be valid JSON (checked with json.loads)
+            - Output must have exactly 4 keys: [ title, category_list, header_img_description, body ]
+            - Output example format: 
+                {
+                    "title": "<Long, Specific, and SEO Optimized Title>", 
+                    "category_list": <["category_1", "category_2"]>, 
+                    "header_img_description": "<hyper-detailed description of image to use for header image>", 
+                    "body": "<## Body in Markdown\\n\\nShould use expressive markdown syntax.>"
+                }
+            """
+        ),
+    }
 
     def __init__(self, llm: BaseLLM) -> None:
         """Initializes InOut class."""
@@ -27,36 +67,14 @@ class InOut(ABC):
         Returns:
             str: Random article idea.
         """
-        system_message = dedent(
-            """
-            === High Level ===
-            - You are an AI writer on medium.com who comes up with great article ideas (single phrase ideas similar to titles)
-            - All article ideas should answer questions people search for on Google
-            - Be sure to explore a wide variety of topics - this is critically important (ideate in all categories equally)
-            - Both domain-specific and general topics are allowed, and a mix of both is encouraged
-            - Ideas shuold be hyper-sepcific and long-tail
-            - Ideas must be interesting for the rest of time (not time-sensitive content)
-            - Ideas must be non-controvertial in any way (no politics, no religion, no ethics, nothing illegal, etc.)
-
-            === Output Format ===
-            - Output must just be single line article idea (no JSON, no newlines, etc.)
-            """
-        )
 
         messages = [
-            SystemMessage(content=system_message),
+            SystemMessage(content=self.SYSTEM_PROMPTS["generate_random_article_idea"]),
             HumanMessage(
                 content=f"Request: 'Please give me one idea exactly', Broad Category Idea: '{category_injection}'"
             ),
         ]
-        generated_text = self._llm.invoke(input=messages)
-        generated_text = generated_text.replace("<|im_end|>", "")
-        generated_text = generated_text.replace("\n", " ")
-        generated_text = generated_text.replace('"', "")
-        generated_text = generated_text.replace(".", "")
-        generated_text = generated_text.strip()
-
-        return generated_text
+        return self._parse_single_line_output(self._llm.invoke(input=messages))
 
     def write_news_article(
         self, article_idea: str, category_constraint: List[str]
@@ -79,82 +97,99 @@ class InOut(ABC):
                 "body": "## Intro Paragraph\n\nFollowed by entire rest of article all in raw markdown."
             }
         """
-        system_message = dedent(
-            """
-            === High Level ===
-            - You are a professional AI journalist trained in writing long (10+ min read), informative, and engaging articles
-            - You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium.com articles)
-            - Your article must be at least 1000 words in length - this is important because it should have a medium.com-level of detail (very in depth)
-            - Never cut an article short - always write until the end with no ellipses (e.g. never end with "..." or "to be continued", etc.)
-            - Each section of the article must be a minimum of 5 sentences long and ideally 10+ sentences long (as formatting allows)
-            - Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, --- ]
-            
-            === Output Format ===
-            - Output must be valid JSON (checked with json.loads)
-            - Output must have exactly 4 keys: [ title, category_list, header_img_description, body ]
-            - Output example format: 
-                {
-                    "title": "<Long, Specific, and SEO Optimized Title>", 
-                    "category_list": <["category_1", "category_2"]>, 
-                    "header_img_description": "<hyper-detailed description of image to use for header image>", 
-                    "body": "<## Body in Markdown\\n\\nShould use expressive markdown syntax.>"
-                }
-            """
-        )
         messages = [
-            SystemMessage(content=system_message),
+            SystemMessage(content=self.SYSTEM_PROMPTS["write_news_article"]),
             HumanMessage(
                 content=f"Article Idea: '{article_idea}', Categories to Choose From: {category_constraint}"
             ),
         ]
-
         while True:
             try:
                 generated_text = self._llm.invoke(input=messages)
-                generated_text = generated_text.replace("<|im_end|>", "")
-                generated_text = self._clean_output_json_newline(generated_text)
-                loaded_json = json.loads(generated_text)
-                str_expected_keys = [
-                    "title",
-                    "header_img_description",
-                    "body",
-                ]
-                for key in str_expected_keys:
-                    assert key in loaded_json
-                    assert isinstance(loaded_json[key], str)
-                    assert len(loaded_json[key]) > 0
-                list_expected_keys = ["category_list"]
-                for key in list_expected_keys:
-                    assert key in loaded_json
-                    assert isinstance(loaded_json[key], list)
-                    assert len(loaded_json[key]) > 0
-                    assert len(loaded_json[key]) <= 3  # max 3 categories
-                    assert all(isinstance(item, str) for item in loaded_json[key])
-                    # check that all categories are in the constraint
-                    assert all(
-                        category in category_constraint for category in loaded_json[key]
-                    )
-
+                loaded_json = self._parse_json_output(generated_text)
+                self._raise_for_bad_json_output(
+                    loaded_json=loaded_json,
+                    expected_keys_to_type={
+                        "title": str,
+                        "category_list": list,
+                        "header_img_description": str,
+                        "body": str,
+                    },
+                )
+                # Custom validation -> (1-3 categories)
+                assert len(loaded_json["category_list"]) in list(range(1, 4))
                 return loaded_json
             except Exception as e:
                 print(str(e))
 
     @staticmethod
-    def _clean_output_json_newline(json_string: str) -> str:
+    def _parse_single_line_output(input: str) -> str:
         """
-        Replaces internal newlines with escaped newlines in JSON string.
+        Parses single line output from LLM.
 
         Args:
-            json_string (str): JSON string.
+            input (str): Input string to clean.
 
         Returns:
-            str: JSON string with internal newlines replaced with escaped newlines.
+            str: Cleaned string.
         """
+        input = input.replace("<|im_end|>", "")
+        input = input.replace("\n", " ")
+        input = input.replace('"', "")
+        input = input.replace(".", "")
+        input = input.strip()
+        return input
 
-        def replace_newlines(match):
-            return match.group(0).replace("\n", "\\n")
+    @staticmethod
+    def _parse_json_output(json_string: str) -> Dict:
+        """
+        Parses JSON output from LLM.
 
-        return re.sub(r'\"([^"]*)\"', replace_newlines, json_string)
+        Args:
+            json_string (str): JSON string to clean.
+
+        Returns:
+            Dict: Cleaned JSON.
+
+        Raises:
+            JSONDecodeError: If JSON string is not valid.
+        """
+        json_string = json_string.replace("<|im_end|>", "")
+        removed_internal_newlines = re.sub(
+            r'\"([^"]*)\"',  # match anything in quotes including quotes
+            lambda match: match.group(0).replace("\n", "\\n"),
+            json_string,
+        )
+        return json.loads(removed_internal_newlines)
+
+    @staticmethod
+    def _raise_for_bad_json_output(
+        input_json: Dict, expected_keys_to_type: Dict
+    ) -> None:
+        """
+        Raises for bad JSON format.
+
+        Args:
+            input_json (Dict): Loaded JSON.
+            expected_keys_to_type (Dict): Expected keys to type mapping.
+
+        Raises:
+            AssertionError: If JSON is not valid.
+        """
+        assert isinstance(input_json, dict), "Output is not valid JSON."
+        assert set(input_json.keys()) == set(
+            expected_keys_to_type.keys()
+        ), "Output keys do not match expected keys."
+        for input_key, input_value in input_json.items():
+            assert (
+                type(input_value) == expected_keys_to_type[input_key]
+            ), f"Value for key '{input_key}' is not of expected type '{expected_keys_to_type[input_key]}'."
+
+    @staticmethod
+    @abstractmethod
+    def kill() -> None:
+        """Kills LLM runner process."""
+        pass
 
 
 class OllamaInOut(InOut):
@@ -167,10 +202,6 @@ class OllamaInOut(InOut):
 
     @staticmethod
     def kill():
-        """
-        Finds and kills the Ollama runner process. Useful for freeing up VRAM.
-        (must run as sudo, should be ok in docker container)
-        """
         try:
             result = subprocess.run(
                 ["pgrep", "-f", "ollama-runner"], capture_output=True, text=True

@@ -25,13 +25,15 @@ class DiffusersTextToImage(TextToImage):
         self,
         pretrained_model_name_or_path: str,
         num_inference_steps: Optional[int] = 50,
+        enable_cpu_offload: Optional[bool] = True,
     ) -> None:
         """
         Loads local SDXL model.
 
         Args:
             pretrained_model_name_or_path (str): Huggingface Diffusers Download Path.
-            num_inference_steps (int, optional): Number of inference steps. Defaults to 50.
+            num_inference_steps (int, optional): Number of inference steps.
+            enable_cpu_optim (bool, optional): Enables CPU optimization. (use when not enough VRAM or no GPU)
         """
         from diffusers import DiffusionPipeline
 
@@ -41,7 +43,10 @@ class DiffusersTextToImage(TextToImage):
             self._pretrained_model_name_or_path,
             torch_dtype=torch.float16,
         )
-        self._pipe.enable_sequential_cpu_offload()
+        if enable_cpu_offload:
+            self._pipe.enable_sequential_cpu_offload()
+        else:
+            self._pipe.to("cuda")
 
     def generate_image(self, prompt: str, negative_prompt: str) -> Image:
         image = self._pipe(

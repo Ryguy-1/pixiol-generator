@@ -9,68 +9,10 @@ import random
 
 
 def main() -> None:
+    """Run Indefinitely Creating and Publishing New Articles"""
     while True:
         try:
-            # Reinitalize APIs
-            (
-                fetch_api,
-                llm_idea_generator,
-                llm_writer,
-                gen,
-                nsfw_classify,
-                upload_api,
-            ) = initialize_apis()
-
-            # Fetch Categories
-            all_categories = fetch_api.fetch_categories()
-            if len(all_categories) == 0:
-                quit("No Categories Found, Exiting...")
-            category_constraint = [x.title for x in all_categories]
-
-            # Generate Random Article Ideas
-            kill_vram_processes()
-            random_category = random.choice(category_constraint)
-            article_idea = llm_idea_generator.generate_random_article_idea(
-                category_injection=random_category
-            )
-            print(f"Article Idea: {article_idea}\n\n")
-
-            # Generate Article For That Idea
-            article = llm_writer.write_news_article(
-                article_idea=article_idea,
-                category_constraint=category_constraint,
-            )
-            print(f"Title: {article['title']}")
-            print(f"Category List: {article['category_list']}")
-            print(f"Image Description: {article['header_img_description']}")
-            print(f"Body Start: {article['body']}")
-
-            # Generate Image
-            kill_vram_processes()
-            img = gen.generate_image(
-                prompt=article["header_img_description"],
-                negative_prompt=NEGATIVE_PROMPT_FILTER,
-            )
-
-            if nsfw_classify.check_is_nsfw(img):
-                print("NSFW Image Detected, Skipping...")
-                continue
-            print("\n\nNSFW Check: OK\n\n")
-
-            # Publish Article
-            uploaded_asset = upload_api.upload_asset(img)
-            print(f"Uploaded Asset: {uploaded_asset}")
-
-            uploaded_article = upload_api.upload_news_article(
-                title=article["title"],
-                content=article["body"],
-                publishedDate=datetime.now(),
-                featuredImage=uploaded_asset,
-                categories=[
-                    x for x in all_categories if x.title in article["category_list"]
-                ],
-            )
-            print(f"Uploaded Article: {uploaded_article}")
+            create_novel_article()
         except Exception as e:
             print(str(e))
 
@@ -104,6 +46,68 @@ def initialize_apis():
 def kill_vram_processes() -> None:
     """Used to Kill VRAM Processes Before Continuing"""
     OllamaInOut.kill()
+
+
+def create_novel_article() -> None:
+    """Creates a New Article and Publishes"""
+    # === (Re)Initialize APIs ===
+    (
+        fetch_api,
+        llm_idea_generator,
+        llm_writer,
+        gen,
+        nsfw_classify,
+        upload_api,
+    ) = initialize_apis()
+
+    # === Fetch Categories ===
+    all_categories = fetch_api.fetch_categories()
+    if len(all_categories) == 0:
+        quit("No Categories Found, Exiting...")
+    category_constraint = [x.title for x in all_categories]
+
+    # === Generate Random Article Ideas ===
+    kill_vram_processes()
+    random_category = random.choice(category_constraint)
+    article_idea = llm_idea_generator.generate_random_article_idea(
+        category_injection=random_category
+    )
+    print(f"Article Idea: {article_idea}\n\n")
+
+    # === Generate Article For That Idea ===
+    article = llm_writer.write_news_article(
+        article_idea=article_idea,
+        category_constraint=category_constraint,
+    )
+    print(f"Title: {article['title']}")
+    print(f"Category List: {article['category_list']}")
+    print(f"Image Description: {article['header_img_description']}")
+    print(f"Body Start: {article['body']}")
+
+    # === Generate Image ===
+    kill_vram_processes()
+    img = gen.generate_image(
+        prompt=article["header_img_description"],
+        negative_prompt=NEGATIVE_PROMPT_FILTER,
+    )
+
+    if nsfw_classify.check_is_nsfw(img):
+        print("NSFW Image Detected, Skipping...")
+        return
+    print("\n\nNSFW Check: OK\n\n")
+
+    # === Publish Article ===
+    uploaded_asset = upload_api.upload_asset(img)
+    print(f"Uploaded Asset: {uploaded_asset}")
+
+    uploaded_article = upload_api.upload_news_article(
+        title=article["title"],
+        content=article["body"],
+        publishedDate=datetime.now(),
+        featuredImage=uploaded_asset,
+        categories=[x for x in all_categories if x.title in article["category_list"]],
+    )
+    print(f"Uploaded Article: {uploaded_article}")
 
 
 if __name__ == "__main__":
