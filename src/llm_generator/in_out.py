@@ -108,7 +108,7 @@ class InOut(ABC):
                 generated_text = self._llm.invoke(input=messages)
                 loaded_json = self._parse_json_output(generated_text)
                 self._raise_for_bad_json_output(
-                    loaded_json=loaded_json,
+                    input_json=loaded_json,
                     expected_keys_to_type={
                         "title": str,
                         "category_list": list,
