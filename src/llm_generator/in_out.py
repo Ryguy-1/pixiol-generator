@@ -118,6 +118,11 @@ class InOut(ABC):
                 )
                 # Custom validation -> (1-3 categories)
                 assert len(loaded_json["category_list"]) in list(range(1, 4))
+                # Custom validation -> all categories in constraint
+                assert all(
+                    category in category_constraint
+                    for category in loaded_json["category_list"]
+                )
                 return loaded_json
             except Exception as e:
                 print(str(e))
