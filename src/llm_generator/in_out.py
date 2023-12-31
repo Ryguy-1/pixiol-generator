@@ -128,6 +128,7 @@ class InOut(ABC):
                     assert key in loaded_json
                     assert isinstance(loaded_json[key], list)
                     assert len(loaded_json[key]) > 0
+                    assert len(loaded_json[key]) <= 3  # max 3 categories
                     assert all(isinstance(item, str) for item in loaded_json[key])
                     # check that all categories are in the constraint
                     assert all(
