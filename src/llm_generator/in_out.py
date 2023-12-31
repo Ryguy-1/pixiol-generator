@@ -41,12 +41,12 @@ class InOut(ABC):
             === Output Format ===
             - Output must be valid JSON (checked with json.loads)
             - Output must have exactly 4 keys: [ title, category_list, header_img_description, body ]
-            - Output example format: 
+            - Output example format (<> = replace with your own content):
                 {
                     "title": "<Long, Specific, and SEO Optimized Title>", 
                     "category_list": <["category_1", "category_2"]>, 
                     "header_img_description": "<hyper-detailed description of image to use for header image>", 
-                    "body": "<## Body in Markdown\\n\\nShould use expressive markdown syntax.>"
+                    "body": "<## Body in Markdown\\n\\nShould use expressive markdown syntax with proper \\"escape\\" characters>"
                 }
             """
         ),
@@ -91,12 +91,13 @@ class InOut(ABC):
 
         Return Format:
             {
-                "title": "Title Here"
-                "category_list": ["category_1", "category_2"],
-                "header_img_description": "Description of Header Image",
-                "body": "## Intro Paragraph\n\nFollowed by entire rest of article all in raw markdown."
+                "title": "<Long, Specific, and SEO Optimized Title>",
+                "category_list": <["category_1", "category_2"]>,
+                "header_img_description": "<hyper-detailed description of image to use for header image>",
+                "body": "<## Body in Markdown\\n\\nShould use expressive markdown syntax with proper \\"escape\\" characters>"
             }
         """
+        print(self.SYSTEM_PROMPTS["write_news_article"])
         messages = [
             SystemMessage(content=self.SYSTEM_PROMPTS["write_news_article"]),
             HumanMessage(
@@ -106,6 +107,7 @@ class InOut(ABC):
         while True:
             try:
                 generated_text = self._llm.invoke(input=messages)
+                print(generated_text)
                 loaded_json = self._parse_json_output(generated_text)
                 self._raise_for_bad_json_output(
                     input_json=loaded_json,
