@@ -97,7 +97,6 @@ class InOut(ABC):
                 "body": "<## Body in Markdown\\n\\nShould use expressive markdown syntax with proper \\"escape\\" characters>"
             }
         """
-        print(self.SYSTEM_PROMPTS["write_news_article"])
         messages = [
             SystemMessage(content=self.SYSTEM_PROMPTS["write_news_article"]),
             HumanMessage(
@@ -107,7 +106,6 @@ class InOut(ABC):
         while True:
             try:
                 generated_text = self._llm.invoke(input=messages)
-                print(generated_text)
                 loaded_json = self._parse_json_output(generated_text)
                 self._raise_for_bad_json_output(
                     input_json=loaded_json,
