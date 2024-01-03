@@ -135,8 +135,8 @@ class InOut(ABC):
                     },
                 )
                 # === Custom Validation (title) ===
-                assert len(generated_text["title"]) > 0, "Error: Title is empty."
-                assert len(generated_text["title"]) < 150, "Error: Title is too long."
+                assert len(loaded_json["title"]) > 0, "Error: Title is empty."
+                assert len(loaded_json["title"]) < 150, "Error: Title is too long."
 
                 # === Custom Validation (category_list) ===
                 assert len(loaded_json["category_list"]) in list(
@@ -149,14 +149,14 @@ class InOut(ABC):
 
                 # === Custom Validation (header_img_description) ===
                 assert (
-                    len(generated_text["header_img_description"]) > 0
+                    len(loaded_json["header_img_description"]) > 0
                 ), "Error: Header image description is empty."
                 assert (
-                    len(generated_text["header_img_description"]) < 150
+                    len(loaded_json["header_img_description"]) < 150
                 ), "Error: Header image description is too long."
-                
+
                 # === Custom Validation (body) ===
-                assert len(generated_text["body"]) > 0, "Error: Body is empty."
+                assert len(loaded_json["body"]) > 0, "Error: Body is empty."
 
                 return loaded_json
             except Exception as e:
