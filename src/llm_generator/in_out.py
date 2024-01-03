@@ -87,9 +87,6 @@ class InOut(ABC):
                 assert (
                     len(generated_text) > 0
                 ), "Output is empty. Please try again with a different category."
-                assert (
-                    len(generated_text) < 150
-                ), "Output is too long. Please try again with a different category."
                 return generated_text
             except Exception as e:
                 print(str(e))
@@ -151,9 +148,6 @@ class InOut(ABC):
                 assert (
                     len(loaded_json["header_img_description"]) > 0
                 ), "Error: Header image description is empty."
-                assert (
-                    len(loaded_json["header_img_description"]) < 150
-                ), "Error: Header image description is too long."
 
                 # === Custom Validation (body) ===
                 assert len(loaded_json["body"]) > 0, "Error: Body is empty."
