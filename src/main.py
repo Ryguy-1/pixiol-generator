@@ -1,5 +1,5 @@
 from config import *
-from llm_generator.in_out import OllamaInOut
+from llm_generator.in_out import OllamaInOut, OpenAIInOut
 from diffusion_generator.text_to_image import DiffusersTextToImage
 from classifiers.nsfw_classify import HuggingfaceNSFWClassify
 from api_integration.upload import ContentfulUploadAPI
@@ -24,10 +24,10 @@ def initialize_apis():
         environment_id=CONTENTFUL_ENVIRONMENT_ID,
     )
     llm_idea_generator = OllamaInOut(
-        model_name=OLLAMA_MODEL, temperature=OLLAMA_TEMPERATURE_IDEA_GENERATOR
+        model_name=OLLAMA_MODEL, temperature=TEMPERATURE_IDEA_GENERATOR
     )
-    llm_writer = OllamaInOut(
-        model_name=OLLAMA_MODEL, temperature=OLLAMA_TEMPERATURE_WRITER
+    llm_writer = OpenAIInOut(
+        model_name=OPENAI_MODEL, temperature=TEMPERATURE_WRITER, api_key=OPENAI_API_KEY
     )
     gen = DiffusersTextToImage(
         pretrained_model_name_or_path=HUGGINGFACE_DIFFUSERS_PRETRAINED_MODEL_NAME_OR_PATH

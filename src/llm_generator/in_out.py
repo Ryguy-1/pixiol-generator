@@ -1,12 +1,15 @@
 from abc import ABC, abstractmethod
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain.llms.base import BaseLLM
+from langchain.chat_models.base import BaseChatModel
 from langchain.llms.ollama import Ollama
-from typing import Dict, List
+from langchain.chat_models.openai import ChatOpenAI
+from typing import Dict, List, Union, Any
 from textwrap import dedent
 import subprocess
 import json
 import re
+import os
 
 
 class InOut(ABC):
@@ -33,8 +36,10 @@ class InOut(ABC):
             === High Level ===
             - You are a professional AI journalist trained in writing long (10+ min read), informative, and engaging articles
             - You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium.com articles)
+            - The content must not be thin as to not hurt SEO (e.g. 1000+ words)
+            - The content must be worthy of Google indexing (e.g. not duplicate content, not spammy, etc.)
             - Your article must be at least 1000 words in length - this is important because it should have a medium.com-level of detail (very in depth)
-            - Never cut an article short - always write until the end with no ellipses (e.g. never end with "..." or "to be continued", etc.)
+            - Never cut an article short - always write until the end with no ellipses (e.g. never end with "...", "to be continued", etc.)
             - Each section of the article must be a minimum of 5 sentences long and ideally 10+ sentences long (as formatting allows)
             - Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, --- ]
             
@@ -52,7 +57,7 @@ class InOut(ABC):
         ),
     }
 
-    def __init__(self, llm: BaseLLM) -> None:
+    def __init__(self, llm: Union[BaseLLM, BaseChatModel]) -> None:
         """Initializes InOut class."""
         self._llm = llm
 
@@ -74,7 +79,7 @@ class InOut(ABC):
                 content=f"Request: 'Please give me one idea exactly', Broad Category Idea: '{category_injection}'"
             ),
         ]
-        return self._parse_single_line_output(self._llm.invoke(input=messages))
+        return self._parse_single_line_output(self._invoke_model(input=messages))
 
     def write_news_article(
         self, article_idea: str, category_constraint: List[str]
@@ -105,7 +110,7 @@ class InOut(ABC):
         ]
         while True:
             try:
-                generated_text = self._llm.invoke(input=messages)
+                generated_text = self._invoke_model(input=messages)
                 loaded_json = self._parse_json_output(generated_text)
                 self._raise_for_bad_json_output(
                     input_json=loaded_json,
@@ -126,6 +131,13 @@ class InOut(ABC):
                 return loaded_json
             except Exception as e:
                 print(str(e))
+
+    def _invoke_model(self, input: Any) -> str:
+        """Abstracts LLM / ChatModel Call"""
+        if isinstance(self._llm, BaseLLM):
+            return self._llm.invoke(input=input)
+        if isinstance(self._llm, BaseChatModel):
+            return self._llm.invoke(input=input).content
 
     @staticmethod
     def _parse_single_line_output(input: str) -> str:
@@ -219,3 +231,14 @@ class OllamaInOut(InOut):
                 print("Ollama runner process not found.")
         except subprocess.CalledProcessError as e:
             print(f"Error: {e}")
+
+
+class OpenAIInOut(InOut):
+    def __init__(self, model_name: str, temperature: int, api_key: str):
+        os.environ["OPENAI_API_KEY"] = api_key
+        llm = ChatOpenAI(model_name=model_name, temperature=temperature)
+        super().__init__(llm)
+
+    @staticmethod
+    def kill():
+        pass  # not local process
