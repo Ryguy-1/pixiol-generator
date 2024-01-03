@@ -134,13 +134,30 @@ class InOut(ABC):
                         "body": str,
                     },
                 )
-                # Custom validation -> (1-3 categories)
-                assert len(loaded_json["category_list"]) in list(range(1, 4))
-                # Custom validation -> all categories in constraint
+                # === Custom Validation (title) ===
+                assert len(generated_text["title"]) > 0, "Error: Title is empty."
+                assert len(generated_text["title"]) < 150, "Error: Title is too long."
+
+                # === Custom Validation (category_list) ===
+                assert len(loaded_json["category_list"]) in list(
+                    range(1, 4)
+                ), "Error: Wrong number of categories."
                 assert all(
                     category in category_constraint
                     for category in loaded_json["category_list"]
-                )
+                ), "Error: Category list must be a subset of the category constraint."
+
+                # === Custom Validation (header_img_description) ===
+                assert (
+                    len(generated_text["header_img_description"]) > 0
+                ), "Error: Header image description is empty."
+                assert (
+                    len(generated_text["header_img_description"]) < 150
+                ), "Error: Header image description is too long."
+                
+                # === Custom Validation (body) ===
+                assert len(generated_text["body"]) > 0, "Error: Body is empty."
+
                 return loaded_json
             except Exception as e:
                 print(str(e))
