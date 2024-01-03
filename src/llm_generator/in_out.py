@@ -79,7 +79,20 @@ class InOut(ABC):
                 content=f"Request: 'Please give me one idea exactly', Broad Category Idea: '{category_injection}'"
             ),
         ]
-        return self._parse_single_line_output(self._invoke_model(input=messages))
+        while True:
+            try:
+                generated_text = self._parse_single_line_output(
+                    self._invoke_model(input=messages)
+                )
+                assert (
+                    len(generated_text) > 0
+                ), "Output is empty. Please try again with a different category."
+                assert (
+                    len(generated_text) < 150
+                ), "Output is too long. Please try again with a different category."
+                return generated_text
+            except Exception as e:
+                print(str(e))
 
     def write_news_article(
         self, article_idea: str, category_constraint: List[str]
