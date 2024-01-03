@@ -16,6 +16,14 @@ class NSFWClassify(ABC):
         """
         pass
 
+    @staticmethod
+    @abstractmethod
+    def kill() -> None:
+        """
+        Kills all processes that are using VRAM.
+        """
+        pass
+
 
 class HuggingfaceNSFWClassify(NSFWClassify):
     def __init__(
@@ -36,14 +44,9 @@ class HuggingfaceNSFWClassify(NSFWClassify):
         )
 
     def check_is_nsfw(self, image: Image) -> bool:
-        """
-        Checks if image is NSFW.
-
-        Args:
-            image (Image): Image to check.
-
-        Returns:
-            bool: True if NSFW else False.
-        """
         result = self._classifier(image)
         return result[0]["label"] == "nsfw"
+
+    @staticmethod
+    def kill() -> None:
+        pass  # No VRAM processes to kill (auto-cleaned)

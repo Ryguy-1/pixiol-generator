@@ -5,7 +5,6 @@ from langchain.chat_models.base import BaseChatModel
 from langchain.llms.ollama import Ollama
 from langchain.chat_models.openai import ChatOpenAI
 from typing import Dict, List, Union, Any
-from textwrap import dedent
 import subprocess
 import json
 import re
@@ -15,47 +14,7 @@ import os
 class InOut(ABC):
     """InOut class for interacting with LLMs."""
 
-    SYSTEM_PROMPTS = {
-        "generate_random_article_idea": dedent(
-            """
-            === High Level ===
-            - You are an AI writer on medium.com who comes up with great article ideas (single phrase ideas similar to titles)
-            - All article ideas should answer questions people search for on Google
-            - Be sure to explore a wide variety of topics - this is critically important
-            - Both domain-specific and general topics are allowed, and a mix of both is encouraged
-            - Ideas shuold be hyper-sepcific and long-tail
-            - Ideas must be interesting for the rest of time (not time-sensitive content)
-            - Ideas must be non-controvertial in any way (no politics, no religion, no ethics, nothing illegal, etc.)
-
-            === Output Format ===
-            - Output must just be single line article idea (no JSON, no newlines, etc.)
-            """
-        ),
-        "write_news_article": dedent(
-            """
-            === High Level ===
-            - You are a professional AI journalist trained in writing long (10+ min read), informative, and engaging articles
-            - You must use eye-catching markdown (highly varied and interesting syntax akin to high quality medium.com articles)
-            - The content must not be thin as to not hurt SEO (e.g. 1000+ words)
-            - The content must be worthy of Google indexing (e.g. not duplicate content, not spammy, etc.)
-            - Your article must be at least 1000 words in length - this is important because it should have a medium.com-level of detail (very in depth)
-            - Never cut an article short - always write until the end with no ellipses (e.g. never end with "...", "to be continued", etc.)
-            - Each section of the article must be a minimum of 5 sentences long and ideally 10+ sentences long (as formatting allows)
-            - Allowed Markdown Elements: [ ## H2, ### H3, **bold**, *italic*, > blockquote, 1. ol item, - ul item, `code`, --- ]
-            
-            === Output Format ===
-            - Output must be valid JSON (checked with json.loads)
-            - Output must have exactly 4 keys: [ title, category_list, header_img_description, body ]
-            - Output example format (<> = replace with your own content):
-                {
-                    "title": "<Long, Specific, and SEO Optimized Title>", 
-                    "category_list": <["category_1", "category_2"]>, 
-                    "header_img_description": "<hyper-detailed description of image to use for header image>", 
-                    "body": "<## Body in Markdown\\n\\nShould use expressive markdown syntax with proper \\"escape\\" characters>"
-                }
-            """
-        ),
-    }
+    PROMPTS_DIR = os.path.join(os.path.dirname(__file__), "prompts")
 
     def __init__(self, llm: Union[BaseLLM, BaseChatModel]) -> None:
         """Initializes InOut class."""
@@ -72,9 +31,8 @@ class InOut(ABC):
         Returns:
             str: Random article idea.
         """
-
         messages = [
-            SystemMessage(content=self.SYSTEM_PROMPTS["generate_random_article_idea"]),
+            SystemMessage(content=self._load_prompt("generate_random_article_idea")),
             HumanMessage(
                 content=f"Request: 'Please give me one idea exactly', Broad Category Idea: '{category_injection}'"
             ),
@@ -113,7 +71,7 @@ class InOut(ABC):
             }
         """
         messages = [
-            SystemMessage(content=self.SYSTEM_PROMPTS["write_news_article"]),
+            SystemMessage(content=self._load_prompt("write_news_article")),
             HumanMessage(
                 content=f"Article Idea: '{article_idea}', Categories to Choose From: {category_constraint}"
             ),
@@ -131,11 +89,8 @@ class InOut(ABC):
                         "body": str,
                     },
                 )
-                # === Custom Validation (title) ===
                 assert len(loaded_json["title"]) > 0, "Error: Title is empty."
                 assert len(loaded_json["title"]) < 150, "Error: Title is too long."
-
-                # === Custom Validation (category_list) ===
                 assert len(loaded_json["category_list"]) in list(
                     range(1, 4)
                 ), "Error: Wrong number of categories."
@@ -143,15 +98,10 @@ class InOut(ABC):
                     category in category_constraint
                     for category in loaded_json["category_list"]
                 ), "Error: Category list must be a subset of the category constraint."
-
-                # === Custom Validation (header_img_description) ===
                 assert (
                     len(loaded_json["header_img_description"]) > 0
                 ), "Error: Header image description is empty."
-
-                # === Custom Validation (body) ===
                 assert len(loaded_json["body"]) > 0, "Error: Body is empty."
-
                 return loaded_json
             except Exception as e:
                 print(str(e))
@@ -162,6 +112,11 @@ class InOut(ABC):
             return self._llm.invoke(input=input)
         if isinstance(self._llm, BaseChatModel):
             return self._llm.invoke(input=input).content
+
+    def _load_prompt(self, prompt_name: str) -> str:
+        """Loads prompt from file."""
+        with open(f"{self.PROMPTS_DIR}/{prompt_name}.txt", "r") as f:
+            return f.read()
 
     @staticmethod
     def _parse_single_line_output(input: str) -> str:

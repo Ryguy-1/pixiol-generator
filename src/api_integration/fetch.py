@@ -108,6 +108,7 @@ class ContentfulFetchAPI(FetchAPI):
         return PersistedAsset(asset.id, asset.fields()["file"]["url"])
 
     def fetch_assets(self) -> List[PersistedAsset]:
+        # TODO: Implement pagination
         space = self._client.spaces().find(self._space_id)
         environment = space.environments().find(self._environment_id)
         assets = environment.assets().all()
@@ -120,6 +121,7 @@ class ContentfulFetchAPI(FetchAPI):
         return PersistedCategory(entry.id, entry.fields()["title"])
 
     def fetch_categories(self) -> List[PersistedCategory]:
+        # TODO: Implement pagination
         space = self._client.spaces().find(self._space_id)
         environment = space.environments().find(self._environment_id)
         entries = environment.entries().all({"content_type": "category"})
@@ -142,6 +144,7 @@ class ContentfulFetchAPI(FetchAPI):
         )
 
     def fetch_news_articles(self) -> List[PersistedNewsArticle]:
+        # TODO: Implement pagination
         space = self._client.spaces().find(self._space_id)
         environment = space.environments().find(self._environment_id)
         entries = environment.entries().all({"content_type": "newsArticle"})

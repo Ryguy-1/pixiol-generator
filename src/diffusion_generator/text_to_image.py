@@ -19,6 +19,14 @@ class TextToImage(ABC):
         """
         pass
 
+    @staticmethod
+    @abstractmethod
+    def kill() -> None:
+        """
+        Kills all processes that are using VRAM.
+        """
+        pass
+
 
 class DiffusersTextToImage(TextToImage):
     def __init__(
@@ -55,3 +63,7 @@ class DiffusersTextToImage(TextToImage):
             num_inference_steps=self._num_inference_steps,
         ).images[0]
         return image
+
+    @staticmethod
+    def kill() -> None:
+        pass  # Diffusers automatically implements this
