@@ -26,9 +26,10 @@ def initialize_apis():
     llm_idea_generator = OllamaInOut(
         model_name=OLLAMA_MODEL, temperature=TEMPERATURE_IDEA_GENERATOR
     )
-    llm_writer = OpenAIInOut(
-        model_name=OPENAI_MODEL, temperature=TEMPERATURE_WRITER, api_key=OPENAI_API_KEY
-    )
+    llm_writer = OllamaInOut(model_name=OLLAMA_MODEL, temperature=TEMPERATURE_WRITER)
+    # llm_writer = OpenAIInOut(
+    #     model_name=OPENAI_MODEL, temperature=TEMPERATURE_WRITER, api_key=OPENAI_API_KEY
+    # )
     gen = DiffusersTextToImage(
         pretrained_model_name_or_path=HUGGINGFACE_DIFFUSERS_PRETRAINED_MODEL_NAME_OR_PATH
     )
